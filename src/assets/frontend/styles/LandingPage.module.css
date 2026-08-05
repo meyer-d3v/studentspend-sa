@@ -1,0 +1,190 @@
+/* General Layout & Typography */
+.pageContainer {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
+  min-height: 100vh;
+  max-width: 100vw;
+  height: 100vh;
+  width: 100vw;
+  background-color: #ffffff;
+}
+
+/* Header */
+.header {
+  border-bottom: 1px solid #eaeaea;
+  padding: 1rem 2rem;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logoGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logoIcon {
+  width: 24px;
+  height: 24px;
+  background-color: #2b577a; /* Dark blue matching the image */
+  border-radius: 4px;
+}
+
+.logoText {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.navLink:hover {
+  color: #1a1a1a;
+}
+
+.loginButton {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #2b577a;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* Main Content Area */
+.mainContent {
+  max-width: 1200px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  display: flex;
+  gap: 4rem;
+  align-items: stretch;
+}
+
+.textContent {
+  flex: 1;
+  max-width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.headline {
+  font-size: 3.5rem;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 1.5rem 0;
+  color: #1a1a1a;
+}
+
+.subhead {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #666;
+  margin: 0 0 2.5rem 0;
+  padding-right: 2rem;
+}
+
+/* Call to Action Buttons */
+.ctaGroup {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.primaryButton {
+  background-color: #2b577a;
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  background-color: transparent;
+  color: #1a1a1a;
+  border: 1px solid #d1d5db;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Features List */
+.featuresList {
+  display: flex;
+  gap: 1.5rem;
+  border-top: 1px solid #eaeaea;
+  padding-top: 2rem;
+}
+
+.featureItem {
+  flex: 1;
+}
+
+.featureItem h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #1a1a1a;
+}
+
+.featureItem p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #777;
+  margin: 0;
+}
+
+/* Right Side Image Placeholder */
+.imageSection {
+  flex: 1;
+  display: flex;
+  min-height: 450px;
+}
+
+.placeholderContainer {
+  flex: 1;
+  background: repeating-linear-gradient(
+    45deg,
+    #f2f1ef,
+    #f2f1ef 10px,
+    #e8e7e4 10px,
+    #e8e7e4 20px
+  );
+  border: 1px solid #e0dfdb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.placeholderBadge {
+  background-color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  color: #888;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}

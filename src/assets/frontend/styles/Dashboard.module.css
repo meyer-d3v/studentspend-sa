@@ -1,0 +1,202 @@
+/* Main Container and Grid Layouts */
+.dashboardContainer {
+  background-color: #F6F5F5;
+  padding: 30px;
+  min-height: 100vh;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+
+.budgetCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.mainContentGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* Common Card Styling */
+.budgetCard, .expensesCard, .chartCard, .tipCard {
+  background-color: #FFFFFF;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Budget Card Styling */
+.cardHeader {
+  color: #757575;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.cardAmount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 15px;
+}
+
+.progressBar {
+  background-color: #E6E6E6;
+  height: 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  background-color: #4CAF50;
+  height: 100%;
+}
+
+.cardAllocation {
+  color: #A0A0A0;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* Expenses Card and Table Styling */
+.expensesCard {
+  width: 100%;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.expensesTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeaderRow {
+  color: #757575;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.tableHeaderRow th {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #E6E6E6;
+}
+
+.amountHeader {
+  text-align: right;
+}
+
+.tableDataRow {
+  color: #333333;
+  font-size: 0.85rem;
+}
+
+.tableDataRow td {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #E6E6E6;
+}
+
+.itemName {
+  font-weight: 600;
+  width: 40%;
+}
+
+.itemAmount {
+  text-align: right;
+  font-weight: 600;
+}
+
+.viewAllExpenses {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.viewAllExpenses a {
+  color: #1976D2;
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.viewAllExpenses a:hover {
+  text-decoration: underline;
+}
+
+/* This Week Chart Styling */
+.chartCard {
+  width: 100%;
+}
+
+.chartPlaceholder {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-color: #FFFFFF;
+}
+
+.chartStripesPattern {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  background: repeating-linear-gradient(
+    45deg,
+    #E8F5E9,
+    #E8F5E9 10px,
+    #FFFFFF 10px,
+    #FFFFFF 20px
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chartPlaceholderText {
+  background-color: #FFFFFF;
+  padding: 5px 15px;
+  border-radius: 2px;
+}
+
+.chartPlaceholderText p {
+  color: #999;
+  font-size: 0.75rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* Tip of the Day Styling */
+.tipCard {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.tipTitle {
+  color: #A0A0A0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.tipContent {
+  color: #555555;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .mainContentGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,225 @@
+/* Layout & Container */
+.pageContainer {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  padding: 4rem 2rem;
+  box-sizing: border-box;
+}
+
+.formWrapper {
+  max-width: 640px;
+  width: 100%;
+}
+
+/* Headers & Text */
+.stepIndicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #777;
+  margin: 0 0 2rem 0;
+}
+
+/* Form Elements */
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Limits Cards */
+.limitsRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.limitCard {
+  flex: 1;
+  border: 1px solid #eaeaea;
+  padding: 1.5rem;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+.limitCardHighlighted {
+  background-color: #f6f5f3; /* Light beige matching the image */
+}
+
+.cardTitle {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cardSubtitle {
+  margin: 0 0 1.5rem 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Custom Input Field with Prefix */
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 46px;
+  background-color: #ffffff;
+}
+
+.currencySymbol {
+  background-color: #f9fafb;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 0 1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #d1d5db;
+}
+
+.amountInput {
+  flex: 1;
+  border: none;
+  height: 100%;
+  padding: 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: right;
+  outline: none;
+  background-color: transparent;
+}
+
+.highlightedInput {
+  color: #2b577a; /* Brand blue text */
+}
+
+/* Split Categories Section */
+.splitSection {
+  margin-bottom: 2.5rem;
+}
+
+.splitHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.splitTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.remainingText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #43805b; /* Forest green */
+}
+
+.categoriesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2.5rem;
+}
+
+.categoryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.categoryName {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.categoryAmount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Category Progress Bars */
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background-color: #e8e6e1; /* Beige background */
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #2b577a; /* Brand blue fill */
+  border-radius: 4px;
+}
+
+/* Action Buttons */
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.primaryButton {
+  background-color: #2b577a;
+  color: #ffffff;
+  border: none;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #20415c;
+}
+
+.secondaryButton {
+  background-color: #ffffff;
+  color: #555;
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #f9fafb;
+  color: #333;
+}

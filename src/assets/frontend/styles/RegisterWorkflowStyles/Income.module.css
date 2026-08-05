@@ -1,0 +1,179 @@
+/* Layout & Container */
+.pageContainer {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  padding: 4rem 2rem;
+  box-sizing: border-box;
+}
+
+.formWrapper {
+  max-width: 580px;
+  width: 100%;
+}
+
+/* Headers & Text */
+.stepIndicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #777;
+  margin: 0 0 2rem 0;
+}
+
+/* Form & List Layout */
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.incomeList {
+  display: flex;
+  flex-direction: column;
+}
+
+.incomeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+/* Item Details */
+.itemDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemTitle {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.itemDescription {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Custom Input Field with Prefix */
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 140px;
+  height: 42px;
+}
+
+.currencySymbol {
+  background-color: #f9fafb;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 0 0.85rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #d1d5db;
+}
+
+.amountInput {
+  flex: 1;
+  border: none;
+  height: 100%;
+  padding: 0 0.85rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  text-align: right;
+  outline: none;
+}
+
+.amountInput:focus {
+  background-color: #fcfcfc;
+}
+
+/* Total Box */
+.totalBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f6f5f3; /* Light beige/grey background */
+  border: 1px solid #eaeaea;
+  padding: 1.5rem;
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.totalLabel {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+}
+
+.totalAmount {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #2b577a; /* Brand blue */
+}
+
+/* Action Buttons */
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.primaryButton {
+  background-color: #2b577a;
+  color: #ffffff;
+  border: none;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #20415c;
+}
+
+.secondaryButton {
+  background-color: #ffffff;
+  color: #555;
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #f9fafb;
+  color: #333;
+}

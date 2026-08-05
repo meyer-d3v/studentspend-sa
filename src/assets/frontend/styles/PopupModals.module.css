@@ -1,0 +1,671 @@
+/* BookingModal.css */
+:root {
+  --primary-color: #1F2A5E; 
+  --secondary-color: #A80634;
+  --accent-color: #FCBB1F;
+  --white-color: #FEFEFE;
+
+
+  /* UI tokens */
+  --bg: #ffffff;
+  --muted: #6b7280;
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(31, 42, 94, 0.12);
+  --max-width: 720px;
+  --gutter: 18px;
+
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --line-height: 1.4;
+  --focus-outline: 3px solid rgba(31,42,94,0.12);
+}
+
+/*
+
+.modalOverlay {
+  position: fixed;          /* make it appear on top of everything *
+  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* semi-transparent background *
+  display: flex;
+  justify-content: center;  /* center horizontally *
+  align-items: center;      /* center vertically *
+  z-index: 1000;            /* high z-index to be on top of calendar *
+  outline: 2px solid red; /* just for debugging *
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0.5));
+}
+
+.modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  position: relative;       /* optional, in case you want close button *
+  padding: 20px 40px 40px 20px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  pointer-events: all;
+}
+
+.modal h2 {
+  margin-bottom: 15px;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.loader {
+  animation: loading 1s infinite ease-out;
+}
+
+@keyframes loading {
+  0% {
+    transform: rotate(0deg); 
+  }
+  100% {
+    transform: rotate(360deg);
+}
+}
+
+*/
+
+/* Overlay (centered modal) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Modal shell */
+.modal {
+  background: var(--white-color);
+  border-radius: var(--radius);
+  width: min(100%, var(--max-width));
+  max-width: 720px;
+  max-height: 92vh;
+  overflow: auto;
+  
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  /*color: #111827;*/
+  color: #111827; /* or your primary text colour */
+  /*color: var(--bg);*/
+  scroll-behavior: smooth;
+  outline: none;
+}
+
+/* Header */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: var(--fs-xl);
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.modal .subtle {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+/* Form layout */
+.modal form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+/* Single-column fallback for small screens */
+@media (max-width: 680px) {
+  .modal form {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form group */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: var(--fs-sm);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Inputs & selects */
+.input,
+.textarea,
+.select,
+.checkbox,
+.radioInput,
+.numberInput {
+  font-size: var(--fs-base);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #E6E8F0;
+  background: #fff;
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+  line-height: var(--line-height);
+}
+
+.input:focus,
+.select:focus,
+.numberInput:focus,
+.textarea:focus {
+  box-shadow: var(--focus-outline);
+  border-color: var(--primary-color);
+}
+
+/* Textarea */
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Selects */
+.select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+                    linear-gradient(to right, #e6e8f0, #e6e8f0);
+  background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px), 100% 0;
+  background-size: 8px 8px, 8px 8px, 1px 1.2em;
+  background-repeat: no-repeat;
+  padding-right: 36px; /* reserve space for arrow */
+  
+}
+
+/* Radio group */
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.radioItem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fs-base);
+  color: var(--primary-color);
+}
+
+.radioInput {
+  width: 16px;
+  height: 16px;
+}
+
+/* Buttons */
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn {
+  font-size: var(--fs-md);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnSecondary {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 9px 12px;
+}
+
+.btnPrimary {
+  background: linear-gradient(90deg, var(--primary-color), #22346a);
+  color: var(--white-color);
+  box-shadow: 0 6px 18px rgba(31, 42, 94, 0.12);
+}
+
+/* Disabled */
+[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loader */
+.loader {
+  animation: rotation 1s linear infinite;
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes rotation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Learners list */
+.learnersList {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #FBFBFF;
+  border: 1px dashed #E6E8F0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.learnerItem {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* DayPicker calendar overrides (simple, scoped) */
+.dayPickerWrapper {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  all: unset;
+}
+
+/* Small helpers */
+.hint {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+/* Hide default scrollbar but keep scroll ability */
+.modal::-webkit-scrollbar { width: 8px; }
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(31,42,94,0.08);
+  border-radius: 10px;
+}
+
+/* Error state utility */
+.inputError {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 4px rgba(168,6,52,0.06);
+}
+
+/* Add course buttons */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.buttonCancel {
+  padding: 10px 18px;
+  background-color: #cccccc;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.buttonSubmit {
+  padding: 10px 18px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- BUTTON GROUP WRAPPER --- */
+.buttonGroup {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  width: 100%;
+}
+
+/* Left = cancel + save */
+.buttonLeft {
+  display: flex;
+  gap: 10px;
+}
+
+/* Right = done */
+.buttonRight {
+  /* no styling */
+}
+/* --- BUTTON BASE STYLE --- */
+.buttonGroup button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+
+/* CANCEL BUTTON */
+.cancelBtn {
+  background-color: #e5e5e5;
+  color: #333;
+}
+.cancelBtn:hover {
+  background-color: #d4d4d4;
+}
+
+/* SAVE BUTTON */
+.saveBtn {
+  background-color: var(--primary-color);
+  color: white;
+}
+.saveBtn:hover {
+  filter: drop-shadow(0 0 5px var(--primary-color));
+}
+
+/* DONE BUTTON */
+.doneBtn {
+  background-color: #4caf50;
+  color: white;
+}
+.doneBtn:hover {
+  background-color: #449d48;
+}
+
+.learnerList {
+  margin-top: 20px;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e5e5e5;
+}
+
+/* No learners added message */
+.noLearners {
+  text-align: center;
+  padding: 20px 0;
+  color: #777;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Individual learner container */
+.learnerItem {
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+/* Field layout */
+.learnerField {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* Field label */
+.learnerLabel {
+  font-weight: 600;
+  color: #444;
+}
+
+/* remove button — subtle pink pill like screenshot */
+.smallGhost {
+  padding: 8px 14px;
+  font-size: 0.86rem;
+  border-radius: 8px;
+  border: none;
+  background: #fff2f2;   /* pale pink */
+  color: #c2413b;        /* coral red text */
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+  box-shadow: 0 1px 0 rgba(16,24,40,0.02) inset;
+}
+
+.smallGhost:hover {
+  background: #ffe7e6;
+  transform: translateY(-1px);
+}
+
+/* Input -> Checkbox */
+/* From Uiverse.io by sujeet-12 */ 
+/* Hide the default checkbox */
+.checkContainer input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkContainer {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  font-size: 20px;
+  user-select: none;
+  animation: jello-horizontal 0.9s both;
+}
+
+.checkmark:hover {
+  animation: jello-horizontal 0.9s both;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+  position: relative;
+  top: 0;
+  left: 0;
+  height: 1.3em;
+  width: 1.3em;
+  border-radius: 50%;
+  background-color: #eee;
+}
+
+/* When the checkbox is checked, add a blue background */
+.checkContainer input:checked ~ .checkmark {
+  background-color: royalblue;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.checkContainer input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+.checkContainer .checkmark:after {
+  left: 0.45em;
+  top: 0.25em;
+  width: 0.25em;
+  height: 0.5em;
+  border: solid white;
+  border-width: 0 0.15em 0.15em 0;
+  transform: rotate(45deg);
+}
+
+@keyframes jello-horizontal {
+  0% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  30% {
+    -webkit-transform: scale3d(1.25, 0.75, 1);
+    transform: scale3d(1.25, 0.75, 1);
+  }
+
+  40% {
+    -webkit-transform: scale3d(0.75, 1.25, 1);
+    transform: scale3d(0.75, 1.25, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.15, 0.85, 1);
+    transform: scale3d(1.15, 0.85, 1);
+  }
+
+  65% {
+    -webkit-transform: scale3d(0.95, 1.05, 1);
+    transform: scale3d(0.95, 1.05, 1);
+  }
+
+  75% {
+    -webkit-transform: scale3d(1.05, 0.95, 1);
+    transform: scale3d(1.05, 0.95, 1);
+  }
+
+  100% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* ------------------------
+   Empty state (no companies)
+   ------------------------ */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border-radius: 8px;
+  background: #FFF7E6;
+  color: var(--pending-text);
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+/* ------------------------
+   Companies
+   ------------------------ */
+
+
+.companies {
+  margin-top: 20px;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e5e5e5;
+}
+
+.companyList {
+  margin-top: 20px;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e5e5e5;
+}
+
+/* Companies list */
+.companiesList {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #FBFBFF;
+  border: 1px dashed #E6E8F0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.companyItem {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Individual company container */
+.companyItem {
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+/* Company field layout */
+.companyField {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* Company field label */
+.companyLabel {
+  font-weight: 600;
+  color: #444;
+}
+
+

@@ -1,122 +1,94 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, replace } from 'react-router-dom';
+import ErrorBoundary from './assets/frontend/components/ErrorBoundary';
+import MainLayout from './assets/frontend/components/MainLayout';
+import RegisterLayout from './assets/frontend/components/RegisterLayout';
+import Login from './assets/frontend/pages/login';
+import Dashboard from './assets/frontend/pages/dashboard';
+import LandingPage from './assets/frontend/pages/landingPage';
+import Budget from './assets/frontend/pages/RegistrationWorkflow/budget';
+import BudgetPlanner from './assets/frontend/pages/budgetPlanner';
+import Alerts from './assets/frontend/pages/alerts';
+import Expenses from './assets/frontend/pages/expenses';
+import Reports from './assets/frontend/pages/reports';
+import Account from './assets/frontend/pages/RegistrationWorkflow/account';
+import Details from './assets/frontend/pages/RegistrationWorkflow/details';
+import Finish from './assets/frontend/pages/RegistrationWorkflow/finish';
+import Income from './assets/frontend/pages/RegistrationWorkflow/income';
+import Verification from './assets/frontend/pages/RegistrationWorkflow/verification';
+import { useContext } from './assets/backend/useContext/user';
 import './App.css'
 
+
+
 function App() {
-  const [count, setCount] = useState(0)
+
+  const location = useLocation();
+
+  function getAuthDetails() {
+
+    const user = useContext();
+
+    if (user == null) {
+
+      console.log("User not logged in. unauthorized access")
+      //replace("./");
+
+    }
+
+  }
+  
+  useEffect(() => {
+    // This code block runs every single time the route changes
+    console.log(`Navigated to: ${location.pathname}`);
+
+    
+    getAuthDetails;
+    // Insert your custom function logic here
+    //myCustomFunction(); 
+  }, [location]); // Triggers when the location object updates
+
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        
+        <Route 
+          element={
+            <ErrorBoundary>
+              <RegisterLayout />
+            </ErrorBoundary>
+          }
         >
-          Count is {count}
-        </button>
-      </section>
+          <Route path="/account" element={<Account/>} />
+          <Route path="/budget" element={<Budget />} />
+          <Route path="/details" element={<Details />} />
+          <Route path="/income" element={<Income />} />
+          <Route path="/verification" element={<Verification />} />
+        </Route>
 
-      <div className="ticks"></div>
+        <Route path="/finish" element={<Finish />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <Route 
+          element={
+            <ErrorBoundary>
+              <MainLayout />
+            </ErrorBoundary>
+          }
+        >
+
+        <Route path="/dashboard" element={<Dashboard key={location.pathname}/>} />
+        <Route path="/budgetplanner" element={<BudgetPlanner />} />
+        <Route path="/alerts" element={<Alerts />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/reports" element={<Reports />} />
+        
+        
+      </Route>
+    </Routes>
+  );
 }
 
-export default App
+export default App;

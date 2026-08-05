@@ -1,0 +1,43 @@
+.appLayout {
+  display: flex;
+  height: 100vh;
+  background-color: #f3f4f6;
+  font-family: Arial, sans-serif;
+  width: 100vw;
+}
+
+.mainContent {
+  flex: 1;
+  overflow-y: auto;
+  
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding-top: 1.5%;
+  padding-bottom: 1.5%;
+  justify-content: space-between;
+  box-shadow: 0 5px 5px -5px #333;
+
+}
+  
+  
+.rightHeader {
+  display: flex;
+  padding-right: 5%;
+}
+
+.headerTextContainer {
+  padding-left: 5%;
+}
+
+.headerText {
+  color: rgba(140, 8, 36);
+  font-weight: 600;
+}
+
+.headerSubtext {
+  color: #373737;
+}
