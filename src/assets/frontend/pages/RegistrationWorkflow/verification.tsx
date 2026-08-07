@@ -1,23 +1,38 @@
 import React, { useState } from 'react';
-import { replace, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Verification.module.css";
+import { LoaderCircle } from 'lucide-react';
 
 const Verification: React.FC = () => {
 
     const navigate = useNavigate();
-    const [userData, setUserData] = useState({
-        
-    });
     const [error, setError] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
 
-    const nextPage = (path: string) => {
-        navigate("/" + path);
-    };
+    const verifyCode = async () => {
 
-    
+        try {
+
+            setLoading(true);
+
+            setTimeout(() => {
+                
+            }, 5000);
+
+            navigate("/income");
+
+        } catch (e) {
+
+            setError("Error occured: " + e);
+            
+        } finally {
+
+            setLoading(false);
+
+        }
+    }    
 
     return (
         <div className={styles.pageContainer}>
@@ -38,17 +53,31 @@ const Verification: React.FC = () => {
                     <input type="text" maxLength={1} className={styles.otpInput} autoFocus />
                 </div>
 
+                {error && (
+                    <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
+
                 <div className={styles.resendText}>
                     Did not get it? <a href="#resend" className={styles.resendLink}>Send the code again</a> in 0:24
                 </div>
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => nextPage("income")}>
-                    Verify and continue
+                    <button type="button" className={styles.primaryButton} onClick={() => verifyCode()}>
+                        {loading ?
+                        (
+                            <LoaderCircle size={16} />
+                        )
+                        :
+                        (
+                            <>Verify and continue</>
+                        )}
                     </button>
-                    <button type="button" className={styles.secondaryButton} onClick={() => nextPage("details")}>
-                    Back
+                    <button type="button" className={styles.secondaryButton} onClick={() => navigate("/details")}>
+                        Back
                     </button>
+                    
                 </div>
 
                 </form>

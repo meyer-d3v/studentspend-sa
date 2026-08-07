@@ -19,9 +19,11 @@ const FallbackUI: React.FC = () => {
             
     }
 
+    {/*
     const reloadApp = () => {
         window.location.reload();
     };
+    */}
     
     const navigateToNextScreen = () => {
 

@@ -1,16 +1,4 @@
 import React from "react";
-import { useState } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
-import { 
-    Calendar, 
-    LayoutDashboard,
-    MessageSquare, 
-    Users,
-    BookKeyIcon,
-    Settings,
-    X as Xicon,
-    Menu as MenuIcon,
-} from "lucide-react";
 import styles from "../styles/SidebarStyles/RegisterSidebar.module.css";
 
 interface SidebarProps {
@@ -20,52 +8,6 @@ interface SidebarProps {
 
 
 const RegisterSidebar: React.FC<SidebarProps> = () => {
-
-    const navigate = useNavigate();
-    //const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [activeTab, setActiveTab] = useState<string>("dashboard");
-    //const [role, setRole] = useState<string | null>(null);
-    
-    
-
-    const signOut = () => {
-        navigate("/", { replace: true });
-    }
-
-    function getFormattedDate(date: Date): string {
-      return date.toLocaleDateString("en-US", {
-        weekday: "long",   // Sunday
-        year: "numeric",   // 2025
-        month: "long",     // September
-        day: "numeric"     // 21
-      });
-    }
-
-    const getDate = () => {
-      const today = new Date();
-      let date = getFormattedDate(today);
-      return date;
-    }
-
-    const getYear = () => {
-      const now = new Date();
-      var fullYear = now.getFullYear().toString();
-      return fullYear;
-    }
-
-    const nextPage = (pageName: string) => {
-      const name = "/" + pageName;
-      navigate(name, { replace: true });
-      //setIsOpen(false);
-    }
-
-    const navigateToPage = (path: string) => {
-
-      navigate("/" + path);
-
-    }; 
-  
-
 
 
     return (

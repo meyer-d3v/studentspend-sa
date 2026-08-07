@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { replace, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../../backend/firebaseConfig/config';
+import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Account.module.css";
+import { LoaderCircle } from 'lucide-react';
 
 const Account: React.FC = () => {
 
@@ -14,30 +16,54 @@ const Account: React.FC = () => {
         confirmPassword: ""
     });
     const [error, setError] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
 
-    const nextPage = (path: string) => {
-      navigate("/" + path);
-    };
+    const validatePassword = () => {
 
-    const getYear = () => {
-      return new Date().getFullYear().toString();
+        if (userData.password != userData.confirmPassword) {
+            return false;
+        }
+
+        return true;
+
     }
 
-    const logUserIn = async () => { 
+    const createUser = async () => { 
 
         try {
 
-            const response = await signInWithEmailAndPassword(auth, userData.email, userData.password);
+            setLoading(true);
+
+            if (!validatePassword()) return setError("Password do not match");
+            
+            const response = await createUserWithEmailAndPassword(auth, userData.email, userData.password)
+            
+            console.log(response);
 
             if (response) {
-                nextPage;
-            }
 
-            throw new Error("Could not sign in");
+                const userDataPayload = {
+                    email: userData.email,
+                    isActive: true,
+                }
+
+                const ref = doc(db, "users", response.user.uid);
+
+                await setDoc(ref, userDataPayload);
+
+                const criticalData = {uid: response.user.uid}
+
+                navigate("/details", { state: criticalData });
+
+            }
             
         } catch (e) {
 
             setError("Error occured: " + e);
+
+        } finally {
+
+            setLoading(false);
 
         }
 
@@ -55,13 +81,17 @@ const Account: React.FC = () => {
                 
                 <div className={styles.inputGroup}>
                     <label htmlFor="studentId" className={styles.label}>
-                    Student email or student number
+                        Student email or student number
                     </label>
                     <input
-                    type="text"
-                    id="studentId"
-                    className={styles.input}
-                    defaultValue="k.majiba@student.ac.za"
+                        type="text"
+                        id="studentId"
+                        className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            email: e.target.value
+                        }))}
+                        defaultValue="d.meyer@student.ac.za"
                     />
                 </div>
 
@@ -74,6 +104,10 @@ const Account: React.FC = () => {
                         type="password"
                         id="password"
                         className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            password: e.target.value
+                        }))}
                         defaultValue="............"
                     />
                     </div>
@@ -85,6 +119,10 @@ const Account: React.FC = () => {
                         type="password"
                         id="confirmPassword"
                         className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            confirmPassword: e.target.value
+                        }))}
                         defaultValue="............"
                     />
                     </div>
@@ -92,21 +130,34 @@ const Account: React.FC = () => {
 
                 <div className={styles.checkboxGroup}>
                     <input 
-                    type="checkbox" 
-                    id="terms" 
-                    className={styles.checkbox} 
-                    defaultChecked 
+                        type="checkbox" 
+                        id="terms" 
+                        className={styles.checkbox} 
+                        required={true}
+                        defaultChecked 
                     />
                     <label htmlFor="terms" className={styles.checkboxLabel}>
-                    I agree to the terms of use and to my financial data being stored<br />securely.
+                        I agree to the terms of use and to my financial data being stored<br />securely.
                     </label>
                 </div>
 
+                {error && (
+                    <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
+
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => nextPage("details")}>
-                    Continue
+                    <button type="button" className={styles.primaryButton} onClick={() => createUser()}>
+                        {loading ? (
+                            <LoaderCircle size={16} />
+                        )
+                        :
+                        (
+                            <>Continue</>
+                        )}
                     </button>
-                    <div className={styles.secondaryLink} onClick={() => nextPage("login")}>
+                    <div className={styles.secondaryLink} onClick={() => navigate("/login")}>
                         I already have an account
                     </div>
                 </div>

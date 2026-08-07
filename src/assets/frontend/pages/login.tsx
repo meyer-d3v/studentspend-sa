@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { auth } from '../../backend/firebaseConfig/config';
 import styles from "../styles/Login.module.css";
+import { LoaderCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
 
@@ -13,18 +14,19 @@ const Login: React.FC = () => {
         password: "",
     });
     const [error, setError] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
 
     const nextPage = () => {
       navigate("/account");
     };
 
-    const getYear = () => {
-      return new Date().getFullYear().toString();
-    }
-
     const logUserIn = async () => { 
 
         try {
+
+            console.log("Tester");
+
+            setLoading(true);
 
             const response = await signInWithEmailAndPassword(auth, userData.email, userData.password);
 
@@ -32,11 +34,15 @@ const Login: React.FC = () => {
                 nextPage;
             }
 
-            throw new Error("Could not sign in");
+            setError("Could not sign in\n" + response );
             
         } catch (e) {
 
             setError("Error occured: " + e);
+
+        } finally {
+
+            setLoading(false);
 
         }
 
@@ -46,12 +52,6 @@ const Login: React.FC = () => {
 
         <div className={styles.pageContainer}>
             <div className={styles.loginCard}>
-
-            {error && (
-                <div className="error-message" style={{ color: 'red', marginBottom: '1rem' }}>
-                    {error}
-                </div>
-            )}
             
             <div className={styles.logoGroup}>
                 <div className={styles.logoIcon}></div>
@@ -63,13 +63,17 @@ const Login: React.FC = () => {
                 <p className={styles.subtitle}>Log in to pick up where you left off.</p>
             </div>
 
-            <form className={styles.form}>
+            <form className={styles.form} onSubmit={() => logUserIn()}>
                 <div className={styles.inputGroup}>
-                <label htmlFor="email" className={styles.label}>Email or student number</label>
+                <label htmlFor="email" className={styles.label}>Email</label>
                 <input 
                     type="text" 
                     id="email" 
                     className={styles.input} 
+                    onChange={(e) => setUserData((prev) => ({
+                        ...prev,
+                        email: e.target.value
+                    }))}
                     defaultValue="k.majiba@mycput.ac.za" 
                 />
                 </div>
@@ -80,6 +84,10 @@ const Login: React.FC = () => {
                     type="password" 
                     id="password" 
                     className={styles.input} 
+                    onChange={(e) => setUserData((prev) => ({
+                        ...prev,
+                        password: e.target.value
+                    }))}
                     defaultValue="............" 
                 />
                 </div>
@@ -92,8 +100,23 @@ const Login: React.FC = () => {
                 <a href="#forgot" className={styles.forgotLink}>Forgot password?</a>
                 </div>
 
-                <button type="button" className={styles.submitButton}>Log in</button>
+                <button type="button" className={styles.submitButton} onClick={() => logUserIn()}>
+                    {loading ? (
+                        <LoaderCircle size={16} className={styles.loaderCircle} />
+                    )
+                    :
+                    (
+                        <>Log in</>
+                    )}
+                </button>
+
             </form>
+
+            {error && (
+                <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                    {error}
+                </div>
+            )}
 
             <div className={styles.footer}>
                 <span className={styles.footerText}>New here? </span>

@@ -1,23 +1,81 @@
-import React, { useState } from 'react';
-import { replace, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useEffect, useState } from 'react';
+import { replace, useLocation, useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../../backend/firebaseConfig/config';
+import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Details.module.css";
+import { doc, updateDoc } from 'firebase/firestore';
+import { LoaderCircle } from 'lucide-react';
 
 const Details: React.FC = () => {
 
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
-        
+        firstName: "",
+        lastName: "",
+        institution: "",
+        yearOfStudy: "",
+        cityCampus: "",
     });
+
+    const location = useLocation();
+    const uid = location.state?.criticalData;
+
     const [error, setError] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
+    const [redirectTimeLeft, setRedirectTimeLeft] = useState<number>(5);
 
-    const nextPage = (path: string) => {
-        navigate("/" + path);
-    };
+    const addUserData = async () => {
 
-    
+        try {
+
+            setLoading(true);
+
+            const ref = doc(db, "users", uid);
+
+            await updateDoc(ref, {
+                userData
+            });
+
+            const criticalData = { uid: uid };
+
+            navigate("/verification", { state: criticalData });
+            
+
+        } catch (e) {
+
+            setError("Error occured: " + e);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    }
+
+    useEffect (() => {
+
+        if (uid) return;
+
+        if (redirectTimeLeft <= 0) {
+                
+            replace("/");
+            return;
+        
+        }
+
+        const timerId = setTimeout(() => {
+
+            setRedirectTimeLeft((prev) => prev - 1);
+            setError("Unauthorized access\nRedirecting in " + redirectTimeLeft);
+
+        }, 5000);
+
+        return () => clearTimeout(timerId);
+        
+
+    }, [redirectTimeLeft]);
+  
 
     return (
         <div className={styles.pageContainer}>
@@ -38,7 +96,11 @@ const Details: React.FC = () => {
                         type="text"
                         id="firstName"
                         className={styles.input}
-                        defaultValue="Khanyisile"
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            firstName: e.target.value
+                        }))}
+                        defaultValue="Dean"
                     />
                     </div>
                     <div className={styles.inputGroup}>
@@ -49,20 +111,28 @@ const Details: React.FC = () => {
                         type="text"
                         id="surname"
                         className={styles.input}
-                        defaultValue="Majiba"
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            lastName: e.target.value
+                        }))}
+                        defaultValue="Meyer"
                     />
                     </div>
                 </div>
 
                 <div className={styles.inputGroup}>
                     <label htmlFor="institution" className={styles.label}>
-                    Institution
+                        Institution
                     </label>
                     <input
-                    type="text"
-                    id="institution"
-                    className={styles.input}
-                    defaultValue="Cape Peninsula University of Technology"
+                        type="text"
+                        id="institution"
+                        className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            institution: e.target.value
+                        }))}
+                        defaultValue="Cape Peninsula University of Technology"
                     />
                 </div>
 
@@ -75,6 +145,10 @@ const Details: React.FC = () => {
                         type="text"
                         id="yearOfStudy"
                         className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            yearOfStudy: e.target.value
+                        }))}
                         defaultValue="Second year"
                     />
                     </div>
@@ -86,17 +160,33 @@ const Details: React.FC = () => {
                         type="text"
                         id="cityOrCampus"
                         className={styles.input}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            cityCampus: e.target.value
+                        }))}
                         defaultValue="D6, Cape Town"
                     />
                     </div>
                 </div>
 
+                {error && (
+                    <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
+
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => nextPage("verification")}>
-                    Continue
+                    <button type="button" className={styles.primaryButton} onClick={() => addUserData()}>
+                        {loading ? (
+                            <LoaderCircle size={16} />
+                        )
+                        :
+                        (
+                            <>Continue</>
+                        )}
                     </button>
-                    <button type="button" className={styles.secondaryButton} onClick={() => nextPage("account")}>
-                    Back
+                    <button type="button" className={styles.secondaryButton} onClick={() => navigate("/account")}>
+                        Back
                     </button>
                 </div>
 

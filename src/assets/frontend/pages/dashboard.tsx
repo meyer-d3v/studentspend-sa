@@ -1,53 +1,7 @@
-import React, { useState } from 'react';
-import { getDoc, collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot } from "firebase/firestore";
+import React from 'react';
 import styles from "../styles/Dashboard.module.css";
-import { useNavigate } from 'react-router-dom';
-import stats from '../../backend/mockData/mockData';
 
 const Dashboard: React.FC = () => {
-
-  const [activeTab, setActiveTab] = useState<string>("compose");
-  const [fromName, setFromName] = useState<string>("");
-  const [fromEmail, setFromEmail] = useState<string>("");
-  const [subject, setSubject] = useState<string>("");
-  const [body, setBody] = useState<any>();
-  const [recipients, setRecipients] = useState<Array<string>>([]);
-  const [dbRecipients, setDbRecipients] = useState<Array<any>>([]);
-  const [canSend, setSendState] = useState<string>("");
-  const [saveLoading, setSaveLoading] = useState<boolean>(false);
-  const [sendLoading, setSendLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
-  const [warningModalInfo, setWarningModalInfo] = useState({
-      isOpen: false,
-      title: "",
-      message: "",
-  });
-  const [infoModal, setInfoModal] = useState({
-      isOpen: false,
-      title: "",
-      message: "",
-  });
-  const [emailModalOpen, setEmailModalOpen] = useState<boolean>(false);
-
-  //Data from database
-  const [dbData, setDbData] = useState<any[]>([]);
-
-  const [senderInfo, setSenderInfo] = useState<any>({
-    senderName: "",
-    senderTitle: "",
-    senderMobile: "",
-    senderEmail: "",
-  });
-
-  
-
-  const handleLogout = () => {
-    // TODO: Clear your authentication tokens/state here
-    console.log('Logging out user...');
-    
-    // Redirect back to the login page
-    navigate('/login', { replace: true });
-  };
 
   // Budget Data
     const budgetCardsData = [

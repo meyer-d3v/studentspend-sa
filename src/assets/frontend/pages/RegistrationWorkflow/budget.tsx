@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
-import { replace, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useLocation, useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../../backend/firebaseConfig/config';
+import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Budget.module.css";
+import { updateDoc, doc } from 'firebase/firestore';
+import { LoaderCircle } from 'lucide-react';
+
 
 const Budget: React.FC = () => {
 
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
-        
+        monthlyIncome: 0,
+        monthlyLimit: 0,
+        weeklyLimit: 0,
     });
+
     const [error, setError] = useState<string>();
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const location = useLocation();
+    const derivedData = location.state?.criticalData;
+
+    if (derivedData) setUserData((prev) => ({ ...prev, monthlyIncome: derivedData?.monthlyIncome }))
+
     const categories = [
         { name: 'Transport', amount: 'R 900', percentage: 35 },
         { name: 'Food', amount: 'R 1 800', percentage: 75 },
@@ -21,9 +33,37 @@ const Budget: React.FC = () => {
         { name: 'Other', amount: 'R 200', percentage: 10 },
     ];
 
-    const nextPage = (path: string) => {
-        navigate("/" + path);
-    };
+    const updateUserData = async () => {
+
+        try {
+        
+            setLoading(true);
+
+            const ref = doc(db, "users", derivedData?.uid);
+
+            await updateDoc(ref, {
+                monthlyLimit: userData.monthlyLimit,
+                weeklyLimit: userData.weeklyLimit,
+            });
+
+            const criticalData = { 
+                monthlyIncome: userData.monthlyIncome,
+                monthlyLimit: userData.monthlyLimit,
+                weeklyLimit: userData.weeklyLimit,
+            };
+
+            navigate("/budget", { state: criticalData });
+
+        } catch (e) {
+
+            setError("Error occured: " + e);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    }
 
     
 
@@ -46,9 +86,14 @@ const Budget: React.FC = () => {
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                        type="text" 
-                        className={styles.amountInput} 
-                        defaultValue="6 000" 
+                            type="text" 
+                            className={styles.amountInput} 
+                            onChange={(e) => setUserData((prev) => ({
+                                ...prev,
+                                monthlyLimit: parseInt(e.target.value.trim()),
+                                weeklyLimit: (parseInt(e.target.value.trim()) / 4),
+                            }))}
+                            defaultValue="6 000" 
                         />
                     </div>
                     </div>
@@ -93,12 +138,24 @@ const Budget: React.FC = () => {
                     </div>
                 </div>
 
+                {error && (
+                    <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
+
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => nextPage("finish")}>
-                    Finish setup
+                    <button type="button" className={styles.primaryButton} onClick={() => updateUserData}>
+                        {loading ? (
+                            <LoaderCircle size={16} />
+                        )
+                        :
+                        (
+                            <>Finish setup</>
+                        )}
                     </button>
-                    <button type="button" className={styles.secondaryButton} onClick={() => nextPage("income")}>
-                    Back
+                    <button type="button" className={styles.secondaryButton} onClick={() => navigate("/income")}>
+                        Back
                     </button>
                 </div>
 

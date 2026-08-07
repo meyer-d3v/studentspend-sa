@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation, replace } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import ErrorBoundary from './assets/frontend/components/ErrorBoundary';
 import MainLayout from './assets/frontend/components/MainLayout';
 import RegisterLayout from './assets/frontend/components/RegisterLayout';
@@ -29,7 +29,7 @@ function App() {
 
     const user = useContext();
 
-    if (user == null) {
+    if (user === null) {
 
       console.log("User not logged in. unauthorized access")
       //replace("./");

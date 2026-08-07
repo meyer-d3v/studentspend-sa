@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { replace, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useLocation, useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Finish.module.css";
@@ -9,13 +8,31 @@ const Finish: React.FC = () => {
 
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
-        
+        monthlyIncome: 0,
+        monthlyLimit: 0,
+        weeklyLimit: 0,
     });
-    const [error, setError] = useState<string>();
 
     const nextPage = (path: string) => {
       navigate("/" + path);
     };
+
+    const location = useLocation();
+    const derivedData = location.state?.criticalData;
+
+    if (derivedData) {
+        
+        setUserData((prev) => ({ 
+            
+            ...prev, 
+            monthlyIncome: derivedData?.monthlyIncome,
+            monthlyLimit: derivedData?.monthlyLimit,
+            weeklyLimit: derivedData?.weeklyLimit,
+
+        }));
+    
+    }
+
 
     
 
@@ -32,33 +49,33 @@ const Finish: React.FC = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     className={styles.checkIcon}
                 >
-                    <path 
+                <path 
                     d="M20 6L9 17L4 12" 
                     stroke="white" 
                     strokeWidth="2" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"
-                    />
+                />
                 </svg>
                 </div>
 
                 <h1 className={styles.title}>You are set up, Khanyisile.</h1>
                 <p className={styles.subtitle}>
-                Your budget is live. Add your first expense and the dashboard starts filling in.
+                    Your budget is live. Add your first expense and the dashboard starts filling in.
                 </p>
 
                 <div className={styles.statsContainer}>
                 <div className={styles.statBox}>
                     <span className={styles.statLabel}>Monthly income</span>
-                    <span className={styles.statValue}>R 6 700</span>
+                    <span className={styles.statValue}>R {userData.monthlyIncome}</span>
                 </div>
                 <div className={styles.statBox}>
                     <span className={styles.statLabel}>Monthly limit</span>
-                    <span className={styles.statValue}>R 6 000</span>
+                    <span className={styles.statValue}>R {userData.monthlyLimit}</span>
                 </div>
                 <div className={`${styles.statBox} ${styles.noBorder}`}>
                     <span className={styles.statLabel}>Weekly limit</span>
-                    <span className={`${styles.statValue} ${styles.highlightedValue}`}>R 1 500</span>
+                    <span className={`${styles.statValue} ${styles.highlightedValue}`}>R {userData.weeklyLimit}</span>
                 </div>
                 </div>
 

@@ -167,6 +167,7 @@
   color: #2b577a;
   text-decoration: none;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .createLink:hover {

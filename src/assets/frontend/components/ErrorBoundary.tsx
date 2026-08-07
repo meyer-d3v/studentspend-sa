@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component<Props, State> {
 
     // Update state when an error is caught
     static getDerivedStateFromError(error: any) {
-        return { hasError: true };
+        return { error: error, hasError: true };
     }
 
     // Log the error (optional but recommended)

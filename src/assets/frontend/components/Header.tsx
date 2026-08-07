@@ -1,5 +1,4 @@
 import React from "react";
-import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/Header.module.css";
 // @ts-ignore
@@ -9,9 +8,13 @@ const Header: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const signOut = () => {
-        navigate("/", { replace: true });
-    }
+    const handleLogout = () => {
+      // TODO: Clear your authentication tokens/state here
+      console.log('Logging out user...');
+      
+      // Redirect back to the login page
+      navigate('/login', { replace: true });
+    };
 
 
     return (
@@ -25,6 +28,7 @@ const Header: React.FC = () => {
         <nav className={styles.navGroup}>
           <a href="#home" className={styles.navLink}>Home</a>
           <a href="#about" className={styles.navLink}>About</a>
+          <button onClick={() => handleLogout()}>Log out</button>
           <div className={styles.userAvatar}>
             <span className={styles.avatarInitials}>KM</span>
           </div>
