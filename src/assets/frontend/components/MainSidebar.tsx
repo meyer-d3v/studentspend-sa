@@ -61,12 +61,12 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             <li 
               className={`
                 ${styles.navItem} 
-                ${activeTab === "addExpense" && styles.active}
+                ${activeTab === "addExpenses" && styles.active}
               `} 
               
               onClick={() => {
-                setActiveTab("addExpense")
-                navigateToPage("")
+                setActiveTab("addExpenses")
+                navigateToPage("addExpenses")
               }}
             >
               Add expense
@@ -80,7 +80,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               onClick={() => {
                 setActiveTab("expenses")
-                navigateToPage("")
+                navigateToPage("expenses")
               }}
             >
               Expenses
@@ -94,7 +94,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               onClick={() => {
                 setActiveTab("budgetPlanner")
-                navigateToPage("")
+                navigateToPage("budgetPlanner")
               }}
             >
               Budget planner
@@ -108,7 +108,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               onClick={() => {
                 setActiveTab("financialTips")
-                navigateToPage("")
+                navigateToPage("financialTips")
               }}
             >
               Financial tips
@@ -122,7 +122,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               onClick={() => {
                 setActiveTab("alerts")
-                navigateToPage("")
+                navigateToPage("alerts")
               }}
             >
               Alerts
@@ -136,9 +136,23 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               onClick={() => {
                 setActiveTab("reports")
+                navigateToPage("reports")
               }}
             >
               Reports
+            </li>
+            <li 
+              className={`
+                ${styles.navItem} 
+                ${activeTab === "settings" && styles.active}
+              `} 
+              
+              onClick={() => {
+                setActiveTab("settings")
+                navigateToPage("settings")
+              }}
+            >
+              Account
             </li>
           </ul>
         </nav>

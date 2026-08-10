@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Budget.module.css";
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
 
 
@@ -11,18 +12,24 @@ const Budget: React.FC = () => {
 
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
+        uid: "",
+        email: "",
+    });
+    const [userIncomeData, setUserIncomeData] = useState({
         monthlyIncome: 0,
         monthlyLimit: 0,
         weeklyLimit: 0,
     });
 
+    //const remainingBudget = userIncomeData;
+
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
 
-    const location = useLocation();
-    const derivedData = location.state?.criticalData;
+    //const location = useLocation();
+    //const derivedData = location.state;
 
-    if (derivedData) setUserData((prev) => ({ ...prev, monthlyIncome: derivedData?.monthlyIncome }))
+    //if (derivedData) setUserData((prev) => ({ ...prev, monthlyIncome: derivedData?.monthlyIncome }))
 
     const categories = [
         { name: 'Transport', amount: 'R 900', percentage: 35 },
@@ -39,20 +46,22 @@ const Budget: React.FC = () => {
         
             setLoading(true);
 
-            const ref = doc(db, "users", derivedData?.uid);
+            const ref = doc(db, "users", userData.uid);
 
             await updateDoc(ref, {
-                monthlyLimit: userData.monthlyLimit,
-                weeklyLimit: userData.weeklyLimit,
+                limits: {
+                    monthlyLimit: userIncomeData.monthlyLimit,
+                    weeklyLimit: userIncomeData.weeklyLimit,
+                }
             });
 
             const criticalData = { 
-                monthlyIncome: userData.monthlyIncome,
-                monthlyLimit: userData.monthlyLimit,
-                weeklyLimit: userData.weeklyLimit,
+                monthlyIncome: userIncomeData.monthlyIncome,
+                monthlyLimit: userIncomeData.monthlyLimit,
+                weeklyLimit: userIncomeData.weeklyLimit,
             };
 
-            navigate("/budget", { state: criticalData });
+            navigate("/finish", { state: criticalData });
 
         } catch (e) {
 
@@ -64,6 +73,43 @@ const Budget: React.FC = () => {
 
         }
     }
+
+    useEffect(() => {
+
+        const fetchUserEmail = async () => {
+        
+            try {
+                const uid = getAuth().currentUser?.uid || "";
+                const otpRef = doc(db, "users", uid);
+                const otpSnap = await getDoc(otpRef);
+
+                if (!otpSnap.exists()) {
+                    console.error("Error occured: No database document found");
+                    setError("Error occured: No database document found");
+                    return;
+                }
+
+                const data = otpSnap.data() as { email?: string, income?: { totalIncome?: number }  };
+
+                setUserData((prev) => ({
+                    ...prev,
+                    uid: uid,
+                    email: data.email || ""
+                }));
+
+                setUserIncomeData((prev) => ({
+                    ...prev,
+                    monthlyIncome: data.income?.totalIncome || 0,
+                }));
+
+            } catch (e) {
+                setError("Error occured: " + e);
+            }
+        };
+
+        fetchUserEmail();
+
+    }, []);
 
     
 
@@ -81,19 +127,19 @@ const Budget: React.FC = () => {
                     {/* Monthly Limit Card */}
                     <div className={styles.limitCard}>
                     <h4 className={styles.cardTitle}>Monthly limit</h4>
-                    <p className={styles.cardSubtitle}>Out of R 6 700.00 income</p>
+                    <p className={styles.cardSubtitle}>Out of R {userIncomeData.monthlyIncome} income</p>
                     
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                            type="text" 
+                            type="number" 
                             className={styles.amountInput} 
-                            onChange={(e) => setUserData((prev) => ({
+                            onChange={(e) => setUserIncomeData((prev) => ({
                                 ...prev,
-                                monthlyLimit: parseInt(e.target.value.trim()),
-                                weeklyLimit: (parseInt(e.target.value.trim()) / 4),
+                                monthlyLimit: e.target.valueAsNumber,
+                                weeklyLimit: e.target.valueAsNumber / 4,
                             }))}
-                            defaultValue="6 000" 
+                            placeholder="0" 
                         />
                     </div>
                     </div>
@@ -106,9 +152,11 @@ const Budget: React.FC = () => {
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                        type="text" 
-                        className={`${styles.amountInput} ${styles.highlightedInput}`} 
-                        defaultValue="1 500" 
+                            type="number" 
+                            className={`${styles.amountInput} ${styles.highlightedInput}`} 
+                            value={userIncomeData.weeklyLimit || "0"}
+                            placeholder="0" 
+                            disabled
                         />
                     </div>
                     </div>
@@ -116,7 +164,7 @@ const Budget: React.FC = () => {
 
                 <div className={styles.splitSection}>
                     <div className={styles.splitHeader}>
-                    <h3 className={styles.splitTitle}>Split the R 6 000 between your categories</h3>
+                    <h3 className={styles.splitTitle}>Split the R {userIncomeData.monthlyIncome} between your categories</h3>
                     <span className={styles.remainingText}>R 0 left to allocate</span>
                     </div>
 
@@ -129,8 +177,8 @@ const Budget: React.FC = () => {
                         </div>
                         <div className={styles.progressBar}>
                             <div 
-                            className={styles.progressFill} 
-                            style={{ width: `${cat.percentage}%` }}
+                                className={styles.progressFill} 
+                                style={{ width: `${cat.percentage}%` }}
                             ></div>
                         </div>
                         </div>
@@ -145,9 +193,9 @@ const Budget: React.FC = () => {
                 )}
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => updateUserData}>
+                    <button type="button" className={styles.primaryButton} onClick={() => updateUserData()}>
                         {loading ? (
-                            <LoaderCircle size={16} />
+                            <LoaderCircle size={16} className={`loaderCircle`}/>
                         )
                         :
                         (

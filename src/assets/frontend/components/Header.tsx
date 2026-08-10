@@ -16,6 +16,12 @@ const Header: React.FC = () => {
       navigate('/login', { replace: true });
     };
 
+    const pageNavigation = (path: string) => {
+
+      navigate("/" + path);
+
+    }
+
 
     return (
 
@@ -26,11 +32,11 @@ const Header: React.FC = () => {
         </div>
         
         <nav className={styles.navGroup}>
-          <a href="#home" className={styles.navLink}>Home</a>
-          <a href="#about" className={styles.navLink}>About</a>
+          <div className={styles.navLink} onClick={() => pageNavigation("")}>Home</div>
+          <div className={styles.navLink} onClick={() => pageNavigation("about")}>About</div>
           <button onClick={() => handleLogout()}>Log out</button>
           <div className={styles.userAvatar}>
-            <span className={styles.avatarInitials}>KM</span>
+            <span className={styles.avatarInitials}>DM</span>
           </div>
         </nav>
       </header>

@@ -51,6 +51,7 @@
   text-decoration: none;
   color: #555;
   font-size: 0.95rem;
+  cursor: pointer;
 }
 
 .navLink:hover {

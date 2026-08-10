@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, replace } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { db, auth } from '../../../backend/firebaseConfig/config';
 import { updateDoc, doc } from 'firebase/firestore';
 import styles from "../../styles/RegisterWorkflowStyles/Income.module.css";
 import { LoaderCircle } from 'lucide-react';
+import { getAuth } from 'firebase/auth';
 
 const Income: React.FC = () => {
 
@@ -13,11 +14,9 @@ const Income: React.FC = () => {
         nsfasAllowance: 0,
         partTimeWork: 0,
         familySupport: 0,
-        totalIncome: 0
     });
 
-    const location = useLocation();
-    const uid = location.state?.criticalData;
+    const uid = getAuth().currentUser?.uid;
 
     const [error, setError] = useState<string>();
     const [redirectTimeLeft, setRedirectTimeLeft] = useState<number>(5);
@@ -30,14 +29,29 @@ const Income: React.FC = () => {
 
             setLoading(true);
 
-            const ref = doc(db, "users", uid);
+            if (uid) {
 
-            await updateDoc(ref, {
-                nsfasAllowance: userData.nsfasAllowance,
-                partTimeWork: userData.partTimeWork,
-                familySupport: userData.familySupport,
-                totalIncome: (userData.nsfasAllowance + userData.familySupport + userData.partTimeWork) 
-            })
+                const ref = doc(db, "users", uid);
+
+                /*
+                await updateDoc(ref, {
+                    nsfasAllowance: userData.nsfasAllowance,
+                    partTimeWork: userData.partTimeWork,
+                    familySupport: userData.familySupport,
+                    totalIncome: (userData.nsfasAllowance + userData.familySupport + userData.partTimeWork) 
+                })
+                */
+
+                await updateDoc(ref, {
+                    income: {
+                        nsfasAllowance: userData.nsfasAllowance,
+                        partTimeWork: userData.partTimeWork,
+                        familySupport: userData.familySupport,
+                        totalIncome: (userData.nsfasAllowance + userData.partTimeWork + userData.familySupport)
+                    },
+                });
+
+            }
 
             const criticalData = { 
                 uid: uid,
@@ -58,28 +72,27 @@ const Income: React.FC = () => {
     }
 
 
-    useEffect (() => {
+    useEffect(() => {
+    
+        console.log(uid);
 
         if (uid) return;
-
-        if (redirectTimeLeft <= 0) {
-                
-            replace("/");
+    
+        if (redirectTimeLeft === 0) {
+            navigate("/", { replace: true });
             return;
-        
         }
-
+    
         const timerId = setTimeout(() => {
-
             setRedirectTimeLeft((prev) => prev - 1);
-            setError("Unauthorized access\nRedirecting in " + redirectTimeLeft);
-
-        }, 5000);
-
+            // Remove the dynamic setError from here. 
+            // Just set the static error state once if needed.
+            setError("Unauthorized access"); 
+        }, 1000);
+    
         return () => clearTimeout(timerId);
-        
-
-    }, [redirectTimeLeft]);
+    
+    }, [redirectTimeLeft, uid, navigate]);
 
     
 
@@ -104,13 +117,14 @@ const Income: React.FC = () => {
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                            type="text" 
+                            type="number" 
                             className={styles.amountInput} 
+                            value={userData.nsfasAllowance || ""}
                             onChange={(e) => setUserData((prev) => ({
                                 ...prev,
-                                nsfasAllowance: parseInt(e.target.value.trim())
+                                nsfasAllowance: e.target.valueAsNumber || 0
                             }))}
-                            defaultValue="0" 
+                            placeholder="0" 
                         />
                     </div>
                     </div>
@@ -124,13 +138,14 @@ const Income: React.FC = () => {
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                            type="text" 
+                            type="number" 
                             className={styles.amountInput} 
+                            value={userData.partTimeWork || ""}
                             onChange={(e) => setUserData((prev) => ({
                                 ...prev,
-                                partTimeWork: parseInt(e.target.value.trim())
+                                partTimeWork: e.target.valueAsNumber || 0
                             }))}
-                            defaultValue="0" 
+                            placeholder="0" 
                         />
                     </div>
                     </div>
@@ -144,13 +159,22 @@ const Income: React.FC = () => {
                     <div className={styles.inputWrapper}>
                         <span className={styles.currencySymbol}>R</span>
                         <input 
-                            type="text" 
+                            type="number" 
                             className={styles.amountInput} 
-                            onChange={(e) => setUserData((prev) => ({
-                                ...prev,
-                                familySupport: parseInt(e.target.value.trim())
-                            }))}
-                            defaultValue="0" 
+                            value={userData.familySupport  || ""}
+                            onChange={(e) => {
+
+                                console.log(e.target.valueAsNumber)
+                                console.log(typeof e.target.valueAsNumber)
+                                
+                                setUserData((prev) => ({
+                                    ...prev,
+                                    familySupport: e.target.valueAsNumber || 0
+                                }))
+
+                                console.log(userData.familySupport)
+                            }}
+                            placeholder="0" 
                         />
                     </div>
                     </div>
@@ -172,7 +196,7 @@ const Income: React.FC = () => {
                 <div className={styles.actionGroup}>
                     <button type="button" className={styles.primaryButton} onClick={() => updateUserData()}>
                         {loading ? (
-                            <LoaderCircle size={16} />
+                            <LoaderCircle size={16} className={`loaderCircle`}/>
                         )
                         :
                         (

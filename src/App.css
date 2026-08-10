@@ -8,3 +8,16 @@ html, body {
 *, *::before, *::after {
   box-sizing: inherit;
 }
+
+:global(.loaderCircle) {
+  animation: loading 1s infinite ease-in-out;
+}
+
+@keyframes loading {
+  0% {
+      transform: rotate(0);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}

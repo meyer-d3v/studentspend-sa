@@ -1,39 +1,71 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../../backend/firebaseConfig/config';
+import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Finish.module.css";
+import { getDoc, doc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const Finish: React.FC = () => {
 
     const navigate = useNavigate();
     const [userData, setUserData] = useState({
+        name: "",
         monthlyIncome: 0,
         monthlyLimit: 0,
         weeklyLimit: 0,
     });
 
+    const [error, setError] = useState<string>("");
+
     const nextPage = (path: string) => {
       navigate("/" + path);
     };
 
-    const location = useLocation();
-    const derivedData = location.state?.criticalData;
 
-    if (derivedData) {
-        
-        setUserData((prev) => ({ 
-            
-            ...prev, 
-            monthlyIncome: derivedData?.monthlyIncome,
-            monthlyLimit: derivedData?.monthlyLimit,
-            weeklyLimit: derivedData?.weeklyLimit,
-
-        }));
+    useEffect(() => {
     
-    }
+        const fetchUserDetails = async () => {
+        
+            try {
+                const uid = getAuth().currentUser?.uid || "";
+                const otpRef = doc(db, "users", uid);
+                const otpSnap = await getDoc(otpRef);
 
+                if (!otpSnap.exists()) {
+                    console.error("Error occured: No database document found");
+                    setError("Error occured: No database document found");
+                    return;
+                }
 
+                const data = otpSnap.data() as { 
+                    firstName?: string,
+                    email?: string, 
+                    income?: { 
+                        totalIncome?: number 
+                    },
+                    limits?: {
+                        monthlyLimit? : number,
+                        weeklyLimit? : number
+                    }
+                };
+
+                setUserData((prev) => ({
+                    ...prev,
+                    name: data?.firstName || "",
+                    monthlyIncome: data.income?.totalIncome || 0,
+                    monthlyLimit: data.limits?.monthlyLimit || 0,
+                    weeklyLimit: data.limits?.weeklyLimit || 0
+                }));
+
+            } catch (e) {
+                setError("Error occured: " + e);
+            }
+        };
+
+        fetchUserDetails();
+
+    }, []);
     
 
     return (
@@ -59,7 +91,7 @@ const Finish: React.FC = () => {
                 </svg>
                 </div>
 
-                <h1 className={styles.title}>You are set up, Khanyisile.</h1>
+                <h1 className={styles.title}>You are set up, {userData.name}.</h1>
                 <p className={styles.subtitle}>
                     Your budget is live. Add your first expense and the dashboard starts filling in.
                 </p>
@@ -78,6 +110,12 @@ const Finish: React.FC = () => {
                     <span className={`${styles.statValue} ${styles.highlightedValue}`}>R {userData.weeklyLimit}</span>
                 </div>
                 </div>
+
+                {error && (
+                    <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
 
                 <div className={styles.actionGroup}>
                 <button type="button" className={styles.primaryButton} onClick={() => nextPage("dashboard")}>

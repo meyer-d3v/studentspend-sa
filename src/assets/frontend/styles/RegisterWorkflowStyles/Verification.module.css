@@ -1,130 +1,96 @@
-/* Layout & Container */
-.pageContainer {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* Container & Layout */
+.container {
+  display: flex;
+  justify-content: flex-start;
+  padding: 4rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #333;
   min-height: 100vh;
   background-color: #ffffff;
-  display: flex;
-  justify-content: center;
-  padding: 4rem 2rem;
-  box-sizing: border-box;
 }
 
-.formWrapper {
-  max-width: 580px;
+.content {
+  max-width: 500px;
   width: 100%;
 }
 
-/* Headers & Text */
-.stepIndicator {
+/* Typography */
+.stepText {
   font-size: 0.75rem;
   font-weight: 600;
   color: #888;
-  letter-spacing: 1px;
-  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: block;
 }
 
 .title {
-  font-size: 2.2rem;
-  font-weight: 500;
-  color: #1a1a1a;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 0.75rem 0;
 }
 
 .subtitle {
   font-size: 0.95rem;
-  color: #777;
+  color: #666;
+  line-height: 1.6;
   margin: 0 0 2.5rem 0;
 }
 
-/* Form Layout */
-.form {
-  display: flex;
-  flex-direction: column;
+/* Resend Link Section */
+.resendContainer {
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
 }
 
-/* OTP Input Group */
-.otpGroup {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.otpInput {
-  width: 52px;
-  height: 64px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1.75rem;
-  font-weight: 500;
-  color: #1a1a1a;
-  text-align: center;
-  outline: none;
-  background-color: #ffffff;
-  transition: border-color 0.2s;
-}
-
-.otpInput.filled {
-  border-color: #6b8ea8; /* Muted blue border for filled state */
-}
-
-.otpInput:focus {
-  border-color: #2b577a; /* Strong brand blue on focus */
-}
-
-/* Resend Text */
 .resendText {
-  font-size: 0.9rem;
   color: #888;
-  margin-bottom: 2.5rem;
 }
 
-.resendLink {
-  color: #2b577a;
-  text-decoration: none;
+.resendWait {
+  color: #555;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #1f4363;
   font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
 }
 
-.resendLink:hover {
+.resendBtn:hover {
   text-decoration: underline;
 }
 
 /* Action Buttons */
-.actionGroup {
+.actionButtons {
   display: flex;
-  align-items: center;
   gap: 1rem;
 }
 
-.primaryButton {
-  background-color: #2b577a; /* Brand blue */
-  color: #ffffff;
+.primaryBtn {
+  background-color: #1f4363;
+  color: white;
   border: none;
-  padding: 0.85rem 1.75rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 4px;
-  font-weight: 600;
   font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
-.primaryButton:hover {
-  background-color: #20415c;
-}
-
-.secondaryButton {
-  background-color: #ffffff;
+.secondaryBtn {
+  background-color: white;
   color: #555;
   border: 1px solid #d1d5db;
-  padding: 0.85rem 1.75rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 4px;
-  font-weight: 600;
   font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.secondaryButton:hover {
-  background-color: #f9fafb;
-  color: #333;
 }

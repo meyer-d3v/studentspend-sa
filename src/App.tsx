@@ -16,10 +16,12 @@ import Details from './assets/frontend/pages/RegistrationWorkflow/details';
 import Finish from './assets/frontend/pages/RegistrationWorkflow/finish';
 import Income from './assets/frontend/pages/RegistrationWorkflow/income';
 import Verification from './assets/frontend/pages/RegistrationWorkflow/verification';
+import About from './assets/frontend/pages/about';
+import AddExpensePage from './assets/frontend/pages/addExpenses';
+import Settings from './assets/frontend/pages/settings';
+import FinancialTips from './assets/frontend/pages/financialTips';
 import { useContext } from './assets/backend/useContext/user';
 import './App.css'
-
-
 
 function App() {
 
@@ -69,6 +71,7 @@ function App() {
         </Route>
 
         <Route path="/finish" element={<Finish />} />
+        <Route path="/about" element={<About />} />
 
 
         <Route 
@@ -83,7 +86,10 @@ function App() {
         <Route path="/budgetplanner" element={<BudgetPlanner />} />
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/expenses" element={<Expenses />} />
+        <Route path="/addExpenses" element={<AddExpensePage />} />
+        <Route path="/financialTips" element={<FinancialTips />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/settings" element={<Settings />} />
         
         
       </Route>

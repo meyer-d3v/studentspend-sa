@@ -1,0 +1,261 @@
+/* Container & Layout */
+.container {
+  padding: 2.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f7f6f2; /* Matches the beige background */
+  min-height: 100vh;
+  color: #333;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #222;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 1100px;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+/* Left Form Panel */
+.formCard {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  padding: 2rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputGroup {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.input, .textarea {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #333;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus, .textarea:focus {
+  outline: none;
+  border-color: #9ca3af;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+/* Custom Amount Input */
+.amountWrapper {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.currencySymbol {
+  background-color: #f9fafb;
+  padding: 0.6rem 1rem;
+  color: #6b7280;
+  border-right: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.amountInput {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: right;
+  outline: none;
+}
+
+/* Category Chips */
+.categoryContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.categoryChip {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.categoryChip:hover {
+  background-color: #f3f4f6;
+}
+
+.activeChip {
+  background-color: #f0f7fb;
+  border-color: #4b6b8b;
+  color: #2c4a6b;
+  font-weight: 600;
+}
+
+/* Form Footer & Buttons */
+.formFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.uploadBtn {
+  background: transparent;
+  border: 1px dashed #a3a3a3;
+  color: #666;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.saveBtn {
+  background-color: #1a4261;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Right Sidebar Widgets */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.widgetCard {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  padding: 1.5rem;
+}
+
+.widgetTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1.2rem 0;
+}
+
+/* Budget Widget Details */
+.budgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.budgetValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.budgetLimit {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.progressBarContainer {
+  height: 6px;
+  background-color: #e5e5e5;
+  border-radius: 3px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: #b87b2c; /* The brownish/orange color */
+  border-radius: 3px;
+}
+
+.widgetSubtext {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Recent Entries Widget Details */
+.recentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recentItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.recentItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recentDesc {
+  color: #555;
+}
+
+.recentAmount {
+  font-weight: 600;
+  color: #333;
+}

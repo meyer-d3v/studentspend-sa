@@ -23,8 +23,8 @@ const LandingPage: React.FC = () => {
                     <span className={styles.logoText}>StudentSpend SA</span>
                 </div>
                 <nav className={styles.navGroup}>
-                    <a href="#home" className={styles.navLink}>Home</a>
-                    <a href="#about" className={styles.navLink}>About</a>
+                    <div className={styles.navLink} onClick={() => navigateToPage("")}>Home</div>
+                    <div className={styles.navLink} onClick={() => navigateToPage("about")}>About</div>
                     <button className={styles.loginButton} onClick={() => navigateToPage("login")}>Log in</button>
                 </nav>
                 </div>

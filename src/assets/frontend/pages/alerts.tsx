@@ -1,14 +1,126 @@
 import React from 'react';
-// @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../backend/firebaseConfig/config';
+import styles from "../styles/Alerts.module.css";
+
+const alertsData = [
+  {
+    status: 'warning',
+    title: 'Food budget at 84%',
+    time: 'Just now',
+    description: 'You have spent R 620 of R 1 800 allocated to food but three weeks remain. Consider slowing down.'
+  },
+  {
+    status: 'info',
+    title: 'Large expense recorded',
+    time: '2 hours ago',
+    description: 'A textbook purchase of R 300 was added to education, above your R 250 large expense threshold.'
+  },
+  {
+    status: 'danger',
+    title: 'Weekly limit reached',
+    time: 'Yesterday',
+    description: 'Week three spending hit R 1 500. Spending from here comes out of next week.'
+  },
+  {
+    status: 'success',
+    title: 'NSFAS allowance received',
+    time: '3 days ago',
+    description: 'R 5 200 was added to your income for October. Your weekly limit was recalculated.'
+  },
+  {
+    status: 'success',
+    title: 'Data budget on track',
+    time: '5 days ago',
+    description: 'You are at 50% of your data and airtime allocation halfway through the month.'
+  }
+];
+
+const settingsData = [
+  {
+    title: 'Email notifications',
+    description: 'Weekly summary each Monday',
+    defaultChecked: true
+  },
+  {
+    title: 'Large expense alerts',
+    description: 'Anything above R 250',
+    defaultChecked: true
+  },
+  {
+    title: 'Budget limit alerts',
+    description: 'Category and monthly totals',
+    defaultChecked: true
+  },
+  {
+    title: 'Financial tip of the day',
+    description: 'One short tip each morning',
+    defaultChecked: false
+  }
+];
 
 const Alerts: React.FC = () => {
 
-    return (
-        <>
-            
-        </>
-    )
+  return (
+    <div className={styles.container}>
+      {/* Header */}
+      <header className={styles.header}>
+        <h1 className={styles.pageTitle}>Alerts and notifications</h1>
+        <button className={styles.markReadBtn}>Mark all as read</button>
+      </header>
+
+      <div className={styles.layout}>
+        {/* Left Column: Alerts List */}
+        <div className={styles.alertsCard}>
+          {alertsData.map((alert, index) => (
+            <div key={index} className={styles.alertItem}>
+              <div className={styles.alertHeader}>
+                <div className={styles.titleGroup}>
+                  <span className={`${styles.statusDot} ${styles[alert.status]}`}></span>
+                  <h3 className={styles.alertTitle}>{alert.title}</h3>
+                </div>
+                <span className={styles.alertTime}>{alert.time}</span>
+              </div>
+              <p className={styles.alertDescription}>{alert.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Right Column: Settings */}
+        <div className={styles.settingsCard}>
+          <h2 className={styles.settingsTitle}>Notification settings</h2>
+          
+          <div className={styles.settingsList}>
+            {settingsData.map((setting, index) => (
+              <div key={index} className={styles.toggleRow}>
+                <div className={styles.toggleText}>
+                  <h4 className={styles.toggleTitle}>{setting.title}</h4>
+                  <p className={styles.toggleDescription}>{setting.description}</p>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" defaultChecked={setting.defaultChecked} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <hr className={styles.divider} />
+
+          <div className={styles.warningLevelSection}>
+            <h4 className={styles.warningLevelTitle}>Warning level</h4>
+            <div className={styles.warningBarGroup}>
+              <div className={styles.progressBarBg}>
+                <div className={styles.progressBarFill} style={{ width: '80%' }}></div>
+              </div>
+              <span className={styles.warningPercentage}>80%</span>
+            </div>
+            <p className={styles.warningDescription}>
+              You are alerted once a category or your monthly budget reaches this level.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Alerts;

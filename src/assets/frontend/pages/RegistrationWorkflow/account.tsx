@@ -13,7 +13,8 @@ const Account: React.FC = () => {
     const [userData, setUserData] = useState({
         email: "",
         password: "",
-        confirmPassword: ""
+        confirmPassword: "",
+        terms: true
     });
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -40,22 +41,24 @@ const Account: React.FC = () => {
             
             console.log(response);
 
-            if (response) {
+            
 
-                const userDataPayload = {
-                    email: userData.email,
-                    isActive: true,
-                }
-
-                const ref = doc(db, "users", response.user.uid);
-
-                await setDoc(ref, userDataPayload);
-
-                const criticalData = {uid: response.user.uid}
-
-                navigate("/details", { state: criticalData });
-
+            const userDataPayload = {
+                email: userData.email,
+                terms: true,
+                isActive: true,
+                isVerified: false,
             }
+
+            const ref = doc(db, "users", response.user.uid);
+
+            await setDoc(ref, userDataPayload);
+
+            const criticalData = {uid: response.user.uid}
+
+            navigate("/details", { state: criticalData });
+
+            
             
         } catch (e) {
 
@@ -91,7 +94,7 @@ const Account: React.FC = () => {
                             ...prev,
                             email: e.target.value
                         }))}
-                        defaultValue="d.meyer@student.ac.za"
+                        placeholder="d.meyer@student.ac.za"
                     />
                 </div>
 
@@ -108,7 +111,6 @@ const Account: React.FC = () => {
                             ...prev,
                             password: e.target.value
                         }))}
-                        defaultValue="............"
                     />
                     </div>
                     <div className={styles.inputGroup}>
@@ -123,7 +125,6 @@ const Account: React.FC = () => {
                             ...prev,
                             confirmPassword: e.target.value
                         }))}
-                        defaultValue="............"
                     />
                     </div>
                 </div>
@@ -134,6 +135,10 @@ const Account: React.FC = () => {
                         id="terms" 
                         className={styles.checkbox} 
                         required={true}
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            terms: e.target.checked
+                        }))}
                         defaultChecked 
                     />
                     <label htmlFor="terms" className={styles.checkboxLabel}>
@@ -148,9 +153,9 @@ const Account: React.FC = () => {
                 )}
 
                 <div className={styles.actionGroup}>
-                    <button type="button" className={styles.primaryButton} onClick={() => createUser()}>
+                    <button type="button" className={styles.primaryButton} disabled={!userData.terms} onClick={() => createUser()}>
                         {loading ? (
-                            <LoaderCircle size={16} />
+                            <LoaderCircle size={16} className={`loaderCircle`}/>
                         )
                         :
                         (

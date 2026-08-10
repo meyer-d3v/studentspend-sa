@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { replace, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Details.module.css";
@@ -18,7 +18,7 @@ const Details: React.FC = () => {
     });
 
     const location = useLocation();
-    const uid = location.state?.criticalData;
+    const uid = location.state.uid ;
 
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -33,7 +33,11 @@ const Details: React.FC = () => {
             const ref = doc(db, "users", uid);
 
             await updateDoc(ref, {
-                userData
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                institution: userData.institution,
+                yearOfStudy: userData.yearOfStudy,
+                cityCampus: userData.cityCampus,
             });
 
             const criticalData = { uid: uid };
@@ -53,29 +57,28 @@ const Details: React.FC = () => {
 
     }
 
-    useEffect (() => {
+    useEffect(() => {
+
+        console.log(uid);
 
         if (uid) return;
-
-        if (redirectTimeLeft <= 0) {
-                
-            replace("/");
+    
+        if (redirectTimeLeft === 0) {
+            navigate("/", { replace: true });
             return;
-        
         }
-
+    
         const timerId = setTimeout(() => {
-
             setRedirectTimeLeft((prev) => prev - 1);
-            setError("Unauthorized access\nRedirecting in " + redirectTimeLeft);
-
-        }, 5000);
-
+            // Remove the dynamic setError from here. 
+            // Just set the static error state once if needed.
+            setError("Unauthorized access"); 
+        }, 1000);
+    
         return () => clearTimeout(timerId);
-        
+    
+    }, [redirectTimeLeft, uid, navigate]);
 
-    }, [redirectTimeLeft]);
-  
 
     return (
         <div className={styles.pageContainer}>
@@ -100,7 +103,7 @@ const Details: React.FC = () => {
                             ...prev,
                             firstName: e.target.value
                         }))}
-                        defaultValue="Dean"
+                        placeholder="Dean"
                     />
                     </div>
                     <div className={styles.inputGroup}>
@@ -115,7 +118,7 @@ const Details: React.FC = () => {
                             ...prev,
                             lastName: e.target.value
                         }))}
-                        defaultValue="Meyer"
+                        placeholder="Meyer"
                     />
                     </div>
                 </div>
@@ -132,7 +135,7 @@ const Details: React.FC = () => {
                             ...prev,
                             institution: e.target.value
                         }))}
-                        defaultValue="Cape Peninsula University of Technology"
+                        placeholder="Cape Peninsula University of Technology"
                     />
                 </div>
 
@@ -149,7 +152,7 @@ const Details: React.FC = () => {
                             ...prev,
                             yearOfStudy: e.target.value
                         }))}
-                        defaultValue="Second year"
+                        placeholder="Second year"
                     />
                     </div>
                     <div className={styles.inputGroup}>
@@ -164,21 +167,22 @@ const Details: React.FC = () => {
                             ...prev,
                             cityCampus: e.target.value
                         }))}
-                        defaultValue="D6, Cape Town"
+                        placeholder='D6, Cape Town'
                     />
                     </div>
                 </div>
 
                 {error && (
                     <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
-                        {error}
+                        {error} <br/>
+                        Redirecting in {redirectTimeLeft}
                     </div>
                 )}
 
                 <div className={styles.actionGroup}>
                     <button type="button" className={styles.primaryButton} onClick={() => addUserData()}>
                         {loading ? (
-                            <LoaderCircle size={16} />
+                            <LoaderCircle size={16} className={`loaderCircle`}/>
                         )
                         :
                         (

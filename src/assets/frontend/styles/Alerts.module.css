@@ -1,0 +1,249 @@
+/* Container & Layout */
+.container {
+  padding: 2.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f6f5ef; /* Matches the beige background */
+  min-height: 100vh;
+  color: #333;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.markReadBtn {
+  background: none;
+  border: none;
+  color: #1f4363;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.markReadBtn:hover {
+  text-decoration: underline;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
+/* Left Column: Alerts List */
+.alertsCard {
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+}
+
+.alertItem {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.alertItem:last-child {
+  border-bottom: none;
+  /* Add padding to the bottom to match the empty space in the screenshot */
+  padding-bottom: 12rem; 
+}
+
+.alertHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Dot Colors */
+.warning { background-color: #b37e3d; } /* Orange */
+.info { background-color: #3b5c82; } /* Blue */
+.danger { background-color: #9c4141; } /* Red */
+.success { background-color: #4a825b; } /* Green */
+
+.alertTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.alertTime {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.alertDescription {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+  padding-left: 1.25rem; /* Aligns with the title, skipping the dot */
+  line-height: 1.5;
+}
+
+/* Right Column: Settings */
+.settingsCard {
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  padding: 1.5rem;
+}
+
+.settingsTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 1.5rem 0;
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toggleTitle {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 0.25rem 0;
+}
+
+.toggleDescription {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
+}
+
+/* Custom Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e5e5;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #1f4363;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* Divider */
+.divider {
+  margin: 2rem 0;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Warning Level Section */
+.warningLevelTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+}
+
+.warningBarGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.progressBarBg {
+  flex-grow: 1;
+  height: 6px;
+  background-color: #e6e5df;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: #1f4363;
+  border-radius: 3px;
+}
+
+.warningPercentage {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.warningDescription {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+}

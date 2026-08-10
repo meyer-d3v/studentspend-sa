@@ -1,0 +1,245 @@
+/* Container & Base Layout */
+.container {
+  padding: 2.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f6f5ef; /* Beige background */
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+
+/* Toggle Button Group */
+.toggleGroup {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+}
+
+.toggleBtn {
+  background-color: white;
+  color: #555;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-right: 1px solid #d1d5db;
+}
+
+.toggleBtn:last-child {
+  border-right: none;
+}
+
+.activeToggle {
+  background-color: #1f4363;
+  color: white;
+}
+
+/* Summary Cards Grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .summaryGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardLabel {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.75rem;
+}
+
+.cardValueLarge {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.textBlue {
+  color: #1f4363;
+}
+
+/* Reusable Input Groups (Total Budget & Categories) */
+.inputGroupLarge, .inputGroupSmall {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.inputGroupLarge {
+  height: 3rem;
+}
+
+.inputGroupSmall {
+  height: 2.5rem;
+}
+
+.currencyPrefix {
+  background-color: #f9fafb;
+  color: #888;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #d1d5db;
+  font-size: 0.95rem;
+}
+
+.amountInput {
+  flex: 1;
+  border: none;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+  color: #333;
+  text-align: right;
+  outline: none;
+  min-width: 0;
+}
+
+/* Main Panel */
+.mainPanel {
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  padding: 2rem;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.textGreen {
+  color: #3d7a5b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Category Grid */
+.categoryGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 3rem;
+  row-gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 900px) {
+  .categoryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.categoryItem {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.categoryLeft {
+  flex: 1;
+}
+
+.categoryRight {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.categoryName {
+  color: #444;
+}
+
+.categoryPercent {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.progressBarBg {
+  height: 6px;
+  background-color: #e6e5df;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: #1f4363;
+  border-radius: 3px;
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryBtn {
+  background-color: #1f4363;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondaryBtn {
+  background-color: white;
+  color: #555;
+  border: 1px solid #d1d5db;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: pre-wrap;
+  text-align: center;
+  line-height: 1.2;
+}

@@ -16,8 +16,10 @@ const Login: React.FC = () => {
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
 
-    const nextPage = () => {
-      navigate("/account");
+    const nextPage = (path: string) => {
+
+      navigate("/" + path);
+
     };
 
     const logUserIn = async () => { 
@@ -28,13 +30,12 @@ const Login: React.FC = () => {
 
             setLoading(true);
 
-            const response = await signInWithEmailAndPassword(auth, userData.email, userData.password);
+            await signInWithEmailAndPassword(auth, userData.email, userData.password);
+            
+            nextPage("dashboard");
+            
 
-            if (response) {
-                nextPage;
-            }
-
-            setError("Could not sign in\n" + response );
+            //setError("Could not sign in\n" + response );
             
         } catch (e) {
 
@@ -65,44 +66,42 @@ const Login: React.FC = () => {
 
             <form className={styles.form} onSubmit={() => logUserIn()}>
                 <div className={styles.inputGroup}>
-                <label htmlFor="email" className={styles.label}>Email</label>
-                <input 
-                    type="text" 
-                    id="email" 
-                    className={styles.input} 
-                    onChange={(e) => setUserData((prev) => ({
-                        ...prev,
-                        email: e.target.value
-                    }))}
-                    defaultValue="k.majiba@mycput.ac.za" 
-                />
+                    <label htmlFor="email" className={styles.label}>Email</label>
+                    <input 
+                        type="text" 
+                        id="email" 
+                        className={styles.input} 
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            email: e.target.value
+                        }))} 
+                    />
                 </div>
 
                 <div className={styles.inputGroup}>
-                <label htmlFor="password" className={styles.label}>Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    className={styles.input} 
-                    onChange={(e) => setUserData((prev) => ({
-                        ...prev,
-                        password: e.target.value
-                    }))}
-                    defaultValue="............" 
-                />
+                    <label htmlFor="password" className={styles.label}>Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        className={styles.input} 
+                        onChange={(e) => setUserData((prev) => ({
+                            ...prev,
+                            password: e.target.value
+                        }))}
+                    />
                 </div>
 
                 <div className={styles.formOptions}>
-                <label className={styles.checkboxLabel}>
-                    <input type="checkbox" className={styles.checkbox} defaultChecked />
-                    <span className={styles.checkboxText}>Keep me logged<br/>in</span>
-                </label>
-                <a href="#forgot" className={styles.forgotLink}>Forgot password?</a>
+                    <label className={styles.checkboxLabel}>
+                        <input type="checkbox" className={styles.checkbox} defaultChecked />
+                        <span className={styles.checkboxText}>Keep me logged<br/>in</span>
+                    </label>
+                    <a href="#forgot" className={styles.forgotLink}>Forgot password?</a>
                 </div>
 
                 <button type="button" className={styles.submitButton} onClick={() => logUserIn()}>
                     {loading ? (
-                        <LoaderCircle size={16} className={styles.loaderCircle} />
+                        <LoaderCircle size={18} className={`loaderCircle`} />
                     )
                     :
                     (
@@ -120,7 +119,7 @@ const Login: React.FC = () => {
 
             <div className={styles.footer}>
                 <span className={styles.footerText}>New here? </span>
-                <div className={styles.createLink} onClick={() => nextPage()}>Create an account</div>
+                <div className={styles.createLink} onClick={() => nextPage("account")}>Create an account</div>
             </div>
             
             </div>
