@@ -18,6 +18,56 @@ const Settings: React.FC = () => {
     }
   }); 
 
+  const updateUserData = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }
+
+  const deleteAccount = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }
+
+  const resetUserData = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }
+
+  const signUserOut = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }
+
+  
+
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Account</h1>
