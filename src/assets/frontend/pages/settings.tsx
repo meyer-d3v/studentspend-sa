@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from "../styles/Settings.module.css";
 
 const Settings: React.FC = () => {
+
+  const [userData, setUserData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    institution: "",
+    yearOfStudy: "",
+    cityCampus: "",
+    income: {
+      nsfasAllowance: 0,
+      partTimeWork: 0,
+      familySupport: 0,
+      totalIncome: 0,
+    }
+  }); 
 
   return (
     <div className={styles.container}>
@@ -14,9 +29,9 @@ const Settings: React.FC = () => {
           {/* Profile Details Card */}
           <div className={styles.card}>
             <div className={styles.profileHeader}>
-              <div className={styles.avatar}>DM</div>
+              <div className={styles.avatar}>{userData.firstname.charAt(0) + userData.lastname.charAt(0)}</div>
               <div className={styles.profileInfo}>
-                <h2 className={styles.profileName}>Dean Meyer</h2>
+                <h2 className={styles.profileName}>{userData.firstname}</h2>
                 <p className={styles.profileStudentNum}>Student number 000000000</p>
               </div>
               <button className={styles.linkBtn}>Change photo</button>
@@ -28,7 +43,9 @@ const Settings: React.FC = () => {
                 <input 
                   type="text" 
                   className={styles.input} 
-                  defaultValue="email@gmail.com" 
+                  disabled={true}
+                  value={userData.email}
+                  placeholder="email@gmail.com" 
                 />
               </div>
               
@@ -37,7 +54,12 @@ const Settings: React.FC = () => {
                 <input 
                   type="text" 
                   className={styles.input} 
-                  defaultValue="CPUT" 
+                  value={userData.institution}
+                  onChange={(e) => setUserData((prev) => ({
+                    ...prev,
+                    institution: e.target.value
+                  }))}
+                  placeholder="CPUT" 
                 />
               </div>
 
@@ -46,7 +68,12 @@ const Settings: React.FC = () => {
                 <input 
                   type="text" 
                   className={styles.input} 
-                  defaultValue="Second year" 
+                  value={userData.yearOfStudy}
+                  onChange={(e) => setUserData((prev) => ({
+                    ...prev,
+                    yearOfStudy: e.target.value
+                  }))}
+                  placeholder="Second year" 
                 />
               </div>
 
@@ -55,14 +82,19 @@ const Settings: React.FC = () => {
                 <input 
                   type="text" 
                   className={styles.input} 
-                  defaultValue="District 6, Cape Twon" 
+                  value={userData.cityCampus}
+                  onChange={(e) => setUserData((prev) => ({
+                    ...prev,
+                    cityCampus: e.target.value
+                  }))}
+                  placeholder="District 6, Cape Twon" 
                 />
               </div>
             </div>
 
             <div className={styles.formActions}>
-              <button className={styles.primaryBtn}>Save changes</button>
-              <button className={styles.secondaryBtn}>Cancel</button>
+              <button className={styles.primaryBtn} onClick={() => updateUserData()}>Save changes</button>
+              <button className={styles.secondaryBtn} onClick={() => resetUserData()}>Cancel</button>
             </div>
           </div>
 
@@ -73,21 +105,21 @@ const Settings: React.FC = () => {
             <div className={styles.incomeList}>
               <div className={styles.incomeRow}>
                 <span className={styles.incomeLabel}>NSFAS allowance</span>
-                <span className={styles.incomeValue}>R 5 200.00</span>
+                <span className={styles.incomeValue}>R {userData.income.nsfasAllowance}</span>
               </div>
               <div className={styles.incomeRow}>
                 <span className={styles.incomeLabel}>Part-time work</span>
-                <span className={styles.incomeValue}>R 1 100.00</span>
+                <span className={styles.incomeValue}>R {userData.income.partTimeWork}</span>
               </div>
               <div className={styles.incomeRow}>
                 <span className={styles.incomeLabel}>Family support</span>
-                <span className={styles.incomeValue}>R 400.00</span>
+                <span className={styles.incomeValue}>R {userData.income.familySupport}</span>
               </div>
             </div>
 
             <div className={styles.incomeTotal}>
               <span className={styles.totalLabel}>Total monthly income</span>
-              <span className={styles.totalValue}>R 6 700.00</span>
+              <span className={styles.totalValue}>R {userData.income.totalIncome}</span>
             </div>
           </div>
 
@@ -138,14 +170,14 @@ const Settings: React.FC = () => {
               <button className={styles.outlineBtn}>
                 Download my<br/>data
               </button>
-              <button className={styles.dangerBtn}>
+              <button className={styles.dangerBtn} onClick={() => deleteAccount()}>
                 Delete<br/>account
               </button>
             </div>
           </div>
 
           {/* Log Out Button */}
-          <button className={styles.logoutBtn}>Log out</button>
+          <button className={styles.logoutBtn} onClick={() => signUserOut()}>Log out</button>
 
         </div>
       </div>

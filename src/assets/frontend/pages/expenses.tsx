@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from "../styles/Expenses.module.css";
+import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+import { getDoc, doc } from 'firebase/firestore';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
 
 const expensesData = [
   { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: 'R 190.00' },
@@ -19,14 +24,118 @@ const categoryData = [
   { name: 'Education', amount: 'R 183.00', percentage: '30%' },
 ];
 
+type Expenses = {
+  date: string,
+  item: string,
+  category: string,
+  amount: string
+}
+
 const Expenses: React.FC = () => {
+
+
+  const [userExpenses, setUserExpenses] = useState<Expenses[]>([]);
+  const [filtered, setFiltered] = useState<Expenses[]>([]);
+  const [search, setSearch] = useState<String>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<String | null>(null);
+  const navigate = useNavigate();
+
+  const navigatePage = (path: string) => {
+
+    navigate("/" + path);
+
+  }
+
+  const fetchUserExpenses = async () => {
+
+    try {
+
+      setLoading(true);
+
+      const uid = getAuth().currentUser?.uid || "";
+      const otpRef = doc(db, "users", uid);
+      const otpSnap = await getDoc(otpRef);
+
+      if (!otpSnap.exists()) {
+          console.error("Error occured: No database document found");
+          setError("Error occured: No database document found");
+          return false;
+      }
+
+      const data = otpSnap.data() as Expenses[];
+
+      setUserExpenses(data);
+
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+
+  useEffect(() => {
+
+    try {
+
+      fetchUserExpenses();
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    } 
+
+  }, []);
+
+
+
+  useEffect(() => {
+
+    try {
+
+      let list = [...userExpenses];
+
+      if (search.trim()) {
+        const s = search.toLowerCase();
+        list = list.filter((b: any) =>
+        (b.courseTitle || "").toLowerCase().includes(s) ||
+        (b.companyName || "").toLowerCase().includes(s) ||
+        (b.facilitatorName || "").toLowerCase().includes(s)
+        );
+      }
+
+      setFiltered(list);
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    } 
+
+  }, [search]);
+
+
   return (
     <div className={styles.container}>
       {/* Header */}
       <header className={styles.header}>
         <h1 className={styles.pageTitle}>Expenses</h1>
-        <button className={styles.primaryBtn}>Add expense</button>
+        <button className={styles.primaryBtn} onClick={() => navigatePage("addExpenses")}>Add expense</button>
       </header>
+
+      {error && (
+          <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+              {error}
+          </div>
+      )}
 
       {/* Filter Bar */}
       <div className={styles.filterBar}>
@@ -34,6 +143,7 @@ const Expenses: React.FC = () => {
           type="text" 
           placeholder="Search expenses" 
           className={styles.searchInput} 
+          onChange={(e) => setSearch(e.target.value)}
         />
         <div className={styles.selectWrapper}>
           <select className={styles.selectInput}>
@@ -65,19 +175,42 @@ const Expenses: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {expensesData.map((expense, index) => (
-                  <tr key={index}>
-                    <td className={styles.textMuted}>{expense.date}</td>
-                    <td className={styles.textDark}>{expense.item}</td>
-                    <td className={styles.textMuted}>{expense.category}</td>
-                    <td className={`${styles.textRight} ${styles.textBold}`}>
-                      {expense.amount}
-                    </td>
-                    <td className={styles.textRight}>
-                      <button className={styles.editLink}>Edit</button>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <>
+                  {expensesData.map((expense, index) => (
+                    <tr key={index}>
+                      <td className={styles.textMuted}>{expense.date}</td>
+                      <td className={styles.textDark}>{expense.item}</td>
+                      <td className={styles.textMuted}>{expense.category}</td>
+                      <td className={`${styles.textRight} ${styles.textBold}`}>
+                        {expense.amount}
+                      </td>
+                      <td className={styles.textRight}>
+                        <button className={styles.editLink}>Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+  
+  
+                  {(filtered.entries.length != 0 ? filtered : userExpenses).map((expense, index) => (
+                    <tr key={index}>
+                      <td className={styles.textMuted}>{expense.date}</td>
+                      <td className={styles.textDark}>{expense.item}</td>
+                      <td className={styles.textMuted}>{expense.category}</td>
+                      <td className={`${styles.textRight} ${styles.textBold}`}>
+                        {expense.amount}
+                      </td>
+                      <td className={styles.textRight}>
+                        <button className={styles.editLink}>Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                  </>
+                )
+                :
+                (
+                  <>Loading expenses...</>
+                )}
               </tbody>
             </table>
           </div>

@@ -1,7 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 
 const AddExpensePage: React.FC = () => {
+
+  const [formData, setFormData] = useState({
+    date: "",
+    amount: 0,
+    description: "",
+    catagory: "",
+    notes: "",
+  });
+
+  const [activeSelection, setActiveSelection] = useState<string>("");
+
+  const catagories = [
+    "Transport",
+    "Food",
+    "Rent",
+    "Data & Airtime",
+    "Groceries",
+    "Entertainment",
+    "Tuition"
+  ]
+
+  
+
+
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Add new expense</h1>
@@ -14,9 +38,13 @@ const AddExpensePage: React.FC = () => {
             <div className={styles.inputGroup}>
               <label className={styles.label}>Date</label>
               <input 
-                type="text" 
+                type="date" 
                 className={styles.input} 
-                defaultValue="2026-10-26" 
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  date: e.target.value,
+                }))}
+                placeholder="2026-10-26" 
               />
             </div>
             
@@ -25,9 +53,13 @@ const AddExpensePage: React.FC = () => {
               <div className={styles.amountWrapper}>
                 <span className={styles.currencySymbol}>R</span>
                 <input 
-                  type="text" 
+                  type="number" 
                   className={styles.amountInput} 
-                  defaultValue="150.00" 
+                  onChange={(e) => setFormData((prev) => ({
+                    ...prev,
+                    amount: e.target.valueAsNumber,
+                  }))}
+                  placeholder="150.00" 
                 />
               </div>
             </div>
@@ -38,7 +70,11 @@ const AddExpensePage: React.FC = () => {
             <input 
               type="text" 
               className={styles.input} 
-              defaultValue="Groceries at Shoprite" 
+              onChange={(e) => setFormData((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))}
+              placeholder="Groceries at Shoprite" 
             />
           </div>
 
@@ -52,6 +88,24 @@ const AddExpensePage: React.FC = () => {
               <button className={`${styles.categoryChip} ${styles.activeChip}`}>Groceries</button>
               <button className={styles.categoryChip}>Entertainment</button>
               <button className={styles.categoryChip}>Tuition</button>
+
+              {catagories.map((c) => (
+                <button 
+                  key={c}
+                  value={c}
+                  className={`${styles.categoryChip} ${activeSelection === c && styles.activeChip}`}
+                  onClick={() => {
+                    if (activeSelection == c) {
+                      setActiveSelection("");
+                    } else {
+                      setActiveSelection(c);
+                    }
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+
             </div>
           </div>
 
@@ -61,6 +115,10 @@ const AddExpensePage: React.FC = () => {
               className={styles.textarea} 
               placeholder="Weekly shop, split with roommate"
               rows={3}
+              onChange={(e) => setFormData((prev) => ({
+                ...prev,
+                notes: e.target.value,
+              }))}
             ></textarea>
           </div>
 
@@ -71,7 +129,7 @@ const AddExpensePage: React.FC = () => {
             
             <div className={styles.actionButtons}>
               <button type="button" className={styles.cancelBtn}>Cancel</button>
-              <button type="button" className={styles.saveBtn}>Save expense</button>
+              <button type="button" className={styles.saveBtn} onClick={() => console.log(formData)}>Save expense</button>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from "../styles/BudgetPlanner.module.css";
 
 const categories = [
@@ -11,6 +11,65 @@ const categories = [
 ];
 
 const BudgetPlanner: React.FC = () => {
+
+  const [userData, setUserData] = useState({
+    monthlyIncome: 0,
+    monthlyLimit: 0,
+    weeklyLimit: 0,
+    catagoryAllocations: {
+      transport: 900,
+      food: 1800, 
+      rent: 2200,
+      dataAndAirtime: 400,
+      groceries: 500,
+      other: 200,
+    }
+  });
+
+  const saveBudget = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    } finally {
+
+      
+    }
+
+  };
+
+  const resetBudget = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    } finally {
+
+
+    }
+
+  };
+
+
+
+  useEffect(() => {
+
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -29,7 +88,7 @@ const BudgetPlanner: React.FC = () => {
         {/* Monthly Income Card */}
         <div className={styles.card}>
           <span className={styles.cardLabel}>Monthly income</span>
-          <div className={styles.cardValueLarge}>R 6 700.00</div>
+          <div className={styles.cardValueLarge}>R {userData.monthlyIncome || 0}</div>
         </div>
 
         {/* Total Budget Card */}
@@ -40,7 +99,13 @@ const BudgetPlanner: React.FC = () => {
             <input 
               type="text" 
               className={styles.amountInput} 
-              defaultValue="6 000" 
+              value={userData.monthlyLimit} 
+              onChange={(e) => setUserData((prev) => ({
+                ...prev,
+                monthlyLimit: e.target.valueAsNumber,
+                weeklyLimit: (e.target.valueAsNumber / 4)
+              }))}
+              placeholder="6 000" 
             />
           </div>
         </div>
@@ -48,7 +113,7 @@ const BudgetPlanner: React.FC = () => {
         {/* Weekly Limit Card */}
         <div className={styles.card}>
           <span className={styles.cardLabel}>Weekly limit, calculated</span>
-          <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R 1 500.00</div>
+          <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.weeklyLimit}</div>
         </div>
 
       </div>
@@ -83,7 +148,7 @@ const BudgetPlanner: React.FC = () => {
                   <input 
                     type="text" 
                     className={styles.amountInput} 
-                    defaultValue={cat.amount} 
+                    placeholder={cat.amount} 
                   />
                 </div>
               </div>
@@ -94,8 +159,8 @@ const BudgetPlanner: React.FC = () => {
 
         {/* Action Buttons */}
         <div className={styles.actionButtons}>
-          <button className={styles.primaryBtn}>Save budget</button>
-          <button className={styles.secondaryBtn}>Reset to last saved</button>
+          <button className={styles.primaryBtn} onClick={() => saveBudget()}>Save budget</button>
+          <button className={styles.secondaryBtn} onClick={() => resetBudget()}>Reset to last saved</button>
         </div>
       </div>
     </div>

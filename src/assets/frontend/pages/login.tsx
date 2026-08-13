@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { getDoc, doc } from 'firebase/firestore';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
-import { auth } from '../../backend/firebaseConfig/config';
+import { auth, db } from '../../backend/firebaseConfig/config';
 import styles from "../styles/Login.module.css";
 import { LoaderCircle } from 'lucide-react';
 
@@ -31,11 +32,24 @@ const Login: React.FC = () => {
             setLoading(true);
 
             await signInWithEmailAndPassword(auth, userData.email, userData.password);
-            
-            nextPage("dashboard");
-            
 
-            //setError("Could not sign in\n" + response );
+            if (auth.currentUser?.emailVerified) {
+
+                console.log("User is verified, let them in!");
+
+                //check if user has done the complete registration workflow
+                if (await fetchUserEmailStatus() == true) {
+                    navigate("/dashboard");
+                } else {
+                    navigate("/income");
+                }
+
+            } else {
+                console.log("Still waiting for verification...");
+                navigate("/verification");
+                return;
+            }
+            
             
         } catch (e) {
 
@@ -48,6 +62,42 @@ const Login: React.FC = () => {
         }
 
     }
+
+
+
+    const fetchUserEmailStatus = async (): Promise<boolean> => {
+            
+        try {
+            const uid = getAuth().currentUser?.uid || "";
+            const otpRef = doc(db, "users", uid);
+            const otpSnap = await getDoc(otpRef);
+
+            if (!otpSnap.exists()) {
+                console.error("Error occured: No database document found");
+                setError("Error occured: No database document found");
+                return false;
+            }
+
+            const data = otpSnap.data() as { isVerified?: boolean  };
+
+            if (data.isVerified) {
+
+                return true;
+
+            } else {
+
+                return false;
+
+            }
+
+        } catch (e) {
+
+            setError("Error occured: " + e);
+            return false;
+
+        }
+    };
+    
 
     return (
 
