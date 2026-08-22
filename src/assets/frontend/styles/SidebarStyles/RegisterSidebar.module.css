@@ -88,3 +88,14 @@
 .sidebarFooter p {
   margin: 0;
 }
+
+/* Completed Step Styling */
+.stepItem.completedStep .stepIndicator {
+  background-color: #4a7397; /* Lighter blue circle background */
+  border-color: #4a7397;
+  color: #ffffff; /* White for the checkmark */
+}
+
+.stepItem.completedStep .stepLabel {
+  color: #d1e2f0; /* Slightly brighter than the inactive muted blue */
+}

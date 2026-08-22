@@ -33,15 +33,6 @@ const Income: React.FC = () => {
 
                 const ref = doc(db, "users", uid);
 
-                /*
-                await updateDoc(ref, {
-                    nsfasAllowance: userData.nsfasAllowance,
-                    partTimeWork: userData.partTimeWork,
-                    familySupport: userData.familySupport,
-                    totalIncome: (userData.nsfasAllowance + userData.familySupport + userData.partTimeWork) 
-                })
-                */
-
                 await updateDoc(ref, {
                     income: {
                         nsfasAllowance: userData.nsfasAllowance,
@@ -131,52 +122,52 @@ const Income: React.FC = () => {
 
                     {/* Part-time Work Item */}
                     <div className={styles.incomeItem}>
-                    <div className={styles.itemDetails}>
-                        <h4 className={styles.itemTitle}>Part-time work</h4>
-                        <p className={styles.itemDescription}>Tutoring, retail, campus jobs</p>
-                    </div>
-                    <div className={styles.inputWrapper}>
-                        <span className={styles.currencySymbol}>R</span>
-                        <input 
-                            type="number" 
-                            className={styles.amountInput} 
-                            value={userData.partTimeWork || ""}
-                            onChange={(e) => setUserData((prev) => ({
-                                ...prev,
-                                partTimeWork: e.target.valueAsNumber || 0
-                            }))}
-                            placeholder="0" 
-                        />
-                    </div>
+                        <div className={styles.itemDetails}>
+                            <h4 className={styles.itemTitle}>Part-time work</h4>
+                            <p className={styles.itemDescription}>Tutoring, retail, campus jobs</p>
+                        </div>
+                        <div className={styles.inputWrapper}>
+                            <span className={styles.currencySymbol}>R</span>
+                            <input 
+                                type="number" 
+                                className={styles.amountInput} 
+                                value={userData.partTimeWork || ""}
+                                onChange={(e) => setUserData((prev) => ({
+                                    ...prev,
+                                    partTimeWork: e.target.valueAsNumber || 0
+                                }))}
+                                placeholder="0" 
+                            />
+                        </div>
                     </div>
 
                     {/* Family Support Item */}
                     <div className={styles.incomeItem}>
-                    <div className={styles.itemDetails}>
-                        <h4 className={styles.itemTitle}>Family support</h4>
-                        <p className={styles.itemDescription}>Money sent from home</p>
-                    </div>
-                    <div className={styles.inputWrapper}>
-                        <span className={styles.currencySymbol}>R</span>
-                        <input 
-                            type="number" 
-                            className={styles.amountInput} 
-                            value={userData.familySupport  || ""}
-                            onChange={(e) => {
+                        <div className={styles.itemDetails}>
+                            <h4 className={styles.itemTitle}>Family support</h4>
+                            <p className={styles.itemDescription}>Money sent from home</p>
+                        </div>
+                        <div className={styles.inputWrapper}>
+                            <span className={styles.currencySymbol}>R</span>
+                            <input 
+                                type="number" 
+                                className={styles.amountInput} 
+                                value={userData.familySupport  || ""}
+                                onChange={(e) => {
 
-                                console.log(e.target.valueAsNumber)
-                                console.log(typeof e.target.valueAsNumber)
-                                
-                                setUserData((prev) => ({
-                                    ...prev,
-                                    familySupport: e.target.valueAsNumber || 0
-                                }))
+                                    console.log(e.target.valueAsNumber)
+                                    console.log(typeof e.target.valueAsNumber)
+                                    
+                                    setUserData((prev) => ({
+                                        ...prev,
+                                        familySupport: e.target.valueAsNumber || 0
+                                    }))
 
-                                console.log(userData.familySupport)
-                            }}
-                            placeholder="0" 
-                        />
-                    </div>
+                                    console.log(userData.familySupport)
+                                }}
+                                placeholder="0" 
+                            />
+                        </div>
                     </div>
 
                 </div>

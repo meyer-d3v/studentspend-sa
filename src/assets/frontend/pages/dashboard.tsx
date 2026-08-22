@@ -1,23 +1,84 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from "../styles/Dashboard.module.css";
+import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
+import { doc, getDoc } from 'firebase/firestore';
+
+type Expenses = {
+  date: Date,
+  item: string,
+  category: string,
+  amount: number
+}
 
 const Dashboard: React.FC = () => {
 
   // Budget Data
-    const budgetCardsData = [
-      { title: 'Food', amount: '620', allocated: '1 800', spentPercentage: (620 / 1800) * 100 },
-      { title: 'Transport', amount: '340', allocated: '900', spentPercentage: (340 / 900) * 100 },
-      { title: 'Data and airtime', amount: '199', allocated: '400', spentPercentage: (199 / 400) * 100 },
-      { title: 'Groceries', amount: '190', allocated: '500', spentPercentage: (190 / 500) * 100 },
-    ];
-  
-    // Expenses Data
-    const expenses = [
-      { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: '190.00' },
-      { date: '25 Oct', item: 'Taxi to campus', category: 'Transport', amount: '34.00' },
-      { date: '24 Oct', item: 'Data bundle 2GB', category: 'Data', amount: '99.00' },
-      { date: '23 Oct', item: 'Lunch, campus cafe', category: 'Food', amount: '48.00' },
-    ];
+  const budgetCardsData = [
+    { title: 'Food', amount: '620', allocated: '1 800', spentPercentage: (620 / 1800) * 100 },
+    { title: 'Transport', amount: '340', allocated: '900', spentPercentage: (340 / 900) * 100 },
+    { title: 'Data and airtime', amount: '199', allocated: '400', spentPercentage: (199 / 400) * 100 },
+    { title: 'Groceries', amount: '190', allocated: '500', spentPercentage: (190 / 500) * 100 },
+  ];
+
+  // Expenses Data
+  const expenses = [
+    { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: '190.00' },
+    { date: '25 Oct', item: 'Taxi to campus', category: 'Transport', amount: '34.00' },
+    { date: '24 Oct', item: 'Data bundle 2GB', category: 'Data', amount: '99.00' },
+    { date: '23 Oct', item: 'Lunch, campus cafe', category: 'Food', amount: '48.00' },
+  ];
+
+  const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);
+  const [loading, setLaoding] = useState<Boolean>(false);
+
+  const navigate = useNavigate();
+
+  const navigateToPage = (path: string) => {
+    navigate("/" + path);
+  };
+
+  const getUserData = async () => {
+
+    try {
+
+      setLaoding(true);
+
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "expenses", uid);
+      const snapshot = await getDoc(ref);
+
+
+      const data = snapshot?.data() as unknown as Array<Expenses>;
+
+      setUserExpenses(data || []);
+
+      setLaoding(false);
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }
+
+
+  useEffect(() => {
+
+    try {
+
+      getUserData();
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }, []);
   
     
 
@@ -49,28 +110,46 @@ const Dashboard: React.FC = () => {
           <div className={styles.leftColumn}>
             <div className={styles.expensesCard}>
               <div className={styles.cardTitle}>Recent expenses</div>
-              <table className={styles.expensesTable}>
-                <thead>
-                  <tr className={styles.tableHeaderRow}>
-                    <th>DATE</th>
-                    <th>ITEM</th>
-                    <th>CATEGORY</th>
-                    <th className={styles.amountHeader}>AMOUNT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((expense, index) => (
-                    <tr key={index} className={styles.tableDataRow}>
-                      <td>{expense.date}</td>
-                      <td className={styles.itemName}>{expense.item}</td>
-                      <td className={styles.itemCategory}>{expense.category}</td>
-                      <td className={styles.itemAmount}>R {expense.amount}</td>
+              
+              {loading ? (
+
+                <>No expenses</>
+
+              )
+              :
+              (
+                <table className={styles.expensesTable}>
+                  <thead>
+                    <tr className={styles.tableHeaderRow}>
+                      <th>DATE</th>
+                      <th>ITEM</th>
+                      <th>CATEGORY</th>
+                      <th className={styles.amountHeader}>AMOUNT</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {expenses.map((expense, index) => (
+                      <tr key={index} className={styles.tableDataRow}>
+                        <td>{expense.date}</td>
+                        <td className={styles.itemName}>{expense.item}</td>
+                        <td className={styles.itemCategory}>{expense.category}</td>
+                        <td className={styles.itemAmount}>R {expense.amount}</td>
+                      </tr>
+                    ))}
+
+                    {userExpenses.map((expense, index) => (
+                      <tr key={index} className={styles.tableDataRow}>
+                        <td>{expense.date.toDateString()}</td>
+                        <td className={styles.itemName}>{expense.item}</td>
+                        <td className={styles.itemCategory}>{expense.category}</td>
+                        <td className={styles.itemAmount}>R {expense.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               <div className={styles.viewAllExpenses}>
-                <a href="#view-all">View all expenses</a>
+                <div onClick={() => navigateToPage("expenses")}>View all expenses</div>
               </div>
             </div>
           </div>

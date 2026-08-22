@@ -25,10 +25,10 @@ const categoryData = [
 ];
 
 type Expenses = {
-  date: string,
+  date: Date,
   item: string,
   category: string,
-  amount: string
+  amount: number
 }
 
 const Expenses: React.FC = () => {
@@ -54,16 +54,16 @@ const Expenses: React.FC = () => {
       setLoading(true);
 
       const uid = getAuth().currentUser?.uid || "";
-      const otpRef = doc(db, "users", uid);
-      const otpSnap = await getDoc(otpRef);
+      const ref = doc(db, "expenses", uid);
+      const snapshot = await getDoc(ref);
 
-      if (!otpSnap.exists()) {
+      if (!snapshot.exists()) {
           console.error("Error occured: No database document found");
           setError("Error occured: No database document found");
           return false;
       }
 
-      const data = otpSnap.data() as Expenses[];
+      const data = snapshot.data() as Expenses[];
 
       setUserExpenses(data);
 
@@ -175,7 +175,7 @@ const Expenses: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {!loading ? (
                   <>
                   {expensesData.map((expense, index) => (
                     <tr key={index}>
@@ -194,7 +194,7 @@ const Expenses: React.FC = () => {
   
                   {(filtered.entries.length != 0 ? filtered : userExpenses).map((expense, index) => (
                     <tr key={index}>
-                      <td className={styles.textMuted}>{expense.date}</td>
+                      <td className={styles.textMuted}>{expense.date.toDateString()}</td>
                       <td className={styles.textDark}>{expense.item}</td>
                       <td className={styles.textMuted}>{expense.category}</td>
                       <td className={`${styles.textRight} ${styles.textBold}`}>

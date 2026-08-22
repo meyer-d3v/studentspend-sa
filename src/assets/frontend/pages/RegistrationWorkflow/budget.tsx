@@ -21,15 +21,8 @@ const Budget: React.FC = () => {
         weeklyLimit: 0,
     });
 
-    //const remainingBudget = userIncomeData;
-
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
-
-    //const location = useLocation();
-    //const derivedData = location.state;
-
-    //if (derivedData) setUserData((prev) => ({ ...prev, monthlyIncome: derivedData?.monthlyIncome }))
 
     const categories = [
         { name: 'Transport', amount: 'R 900', percentage: 35 },
@@ -80,21 +73,21 @@ const Budget: React.FC = () => {
         
             try {
                 const uid = getAuth().currentUser?.uid || "";
-                const otpRef = doc(db, "users", uid);
-                const otpSnap = await getDoc(otpRef);
+                const ref = doc(db, "users", uid);
+                const snapshot = await getDoc(ref);
 
-                if (!otpSnap.exists()) {
+                if (!snapshot.exists()) {
                     console.error("Error occured: No database document found");
                     setError("Error occured: No database document found");
                     return;
                 }
 
-                const data = otpSnap.data() as { email?: string, income?: { totalIncome?: number }  };
+                const data = snapshot.data() as { email?: string, income?: { totalIncome?: number }  };
 
                 setUserData((prev) => ({
                     ...prev,
                     uid: uid,
-                    email: data.email || ""
+                    email: data.email || "",
                 }));
 
                 setUserIncomeData((prev) => ({
@@ -139,7 +132,8 @@ const Budget: React.FC = () => {
                                 monthlyLimit: e.target.valueAsNumber,
                                 weeklyLimit: e.target.valueAsNumber / 4,
                             }))}
-                            placeholder="0" 
+                            placeholder="0"
+                            max={userIncomeData.monthlyIncome} 
                         />
                     </div>
                     </div>

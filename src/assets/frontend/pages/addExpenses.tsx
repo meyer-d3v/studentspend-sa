@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import styles from "../styles/AddExpenses.module.css";
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
+import { setDoc, doc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const AddExpensePage: React.FC = () => {
 
@@ -21,9 +25,32 @@ const AddExpensePage: React.FC = () => {
     "Groceries",
     "Entertainment",
     "Tuition"
-  ]
+  ];
 
-  
+  const saveData = async () => {
+
+    try {
+
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "expenses", uid);
+
+      await setDoc(ref, {
+        date: formData.date,
+        amount: formData.amount,
+        description: formData.description,
+        catagory: formData.catagory,
+        notes: formData.notes,
+      });
+
+      console.log("Data saved to database");
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  };
 
 
   return (
@@ -81,13 +108,55 @@ const AddExpensePage: React.FC = () => {
           <div className={styles.inputGroup}>
             <label className={styles.label}>Category</label>
             <div className={styles.categoryContainer}>
-              <button className={styles.categoryChip}>Transport</button>
-              <button className={styles.categoryChip}>Food</button>
-              <button className={styles.categoryChip}>Rent</button>
-              <button className={styles.categoryChip}>Data and airtime</button>
-              <button className={`${styles.categoryChip} ${styles.activeChip}`}>Groceries</button>
-              <button className={styles.categoryChip}>Entertainment</button>
-              <button className={styles.categoryChip}>Tuition</button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "transport" && styles.activeChip}`}
+                onClick={() => setActiveSelection("transport")}
+              >
+                Transport
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "food" && styles.activeChip}`}
+                onClick={() => setActiveSelection("food")}
+              >
+                Food
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "rent" && styles.activeChip}`}
+                onClick={() => setActiveSelection("rent")}
+              >
+                Rent
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "dataAndAirtime" && styles.activeChip}`}
+                onClick={() => setActiveSelection("dataAndAirtime")}
+              >
+                Data and airtime
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "groceries" && styles.activeChip}`}
+                onClick={() => setActiveSelection("groceries")}
+              >
+                Groceries
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "entertainment" && styles.activeChip}`}
+                onClick={() => setActiveSelection("entertainment")}
+              >
+                Entertainment
+              </button>
+              
+              <button 
+                className={`${styles.categoryChip} ${activeSelection === "tuition" && styles.activeChip}`}
+                onClick={() => setActiveSelection("tuition")}
+              >
+                Tuition
+              </button>
 
               {catagories.map((c) => (
                 <button 
@@ -129,7 +198,7 @@ const AddExpensePage: React.FC = () => {
             
             <div className={styles.actionButtons}>
               <button type="button" className={styles.cancelBtn}>Cancel</button>
-              <button type="button" className={styles.saveBtn} onClick={() => console.log(formData)}>Save expense</button>
+              <button type="button" className={styles.saveBtn} onClick={() => saveData()}>Save expense</button>
             </div>
           </div>
         </div>

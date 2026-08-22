@@ -8,14 +8,6 @@ const Header: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-      // TODO: Clear your authentication tokens/state here
-      console.log('Logging out user...');
-      
-      // Redirect back to the login page
-      navigate('/login', { replace: true });
-    };
-
     const pageNavigation = (path: string) => {
 
       navigate("/" + path);
@@ -34,8 +26,7 @@ const Header: React.FC = () => {
         <nav className={styles.navGroup}>
           <div className={styles.navLink} onClick={() => pageNavigation("")}>Home</div>
           <div className={styles.navLink} onClick={() => pageNavigation("about")}>About</div>
-          <button onClick={() => handleLogout()}>Log out</button>
-          <div className={styles.userAvatar}>
+          <div className={styles.userAvatar} onClick={() => pageNavigation("settings")}>
             <span className={styles.avatarInitials}>DM</span>
           </div>
         </nav>

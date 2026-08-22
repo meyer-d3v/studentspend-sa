@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/SidebarStyles/MainSidebar.module.css";
+import { getDoc, doc } from "firebase/firestore";
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
+import { getAuth } from "firebase/auth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,12 +17,65 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<string>("dashboard");
+    const [userDetails, setUserDetails] = useState({
+      firstname: "",
+      totalBalance: 0,
+    });
 
     const navigateToPage = (path: string) => {
 
       navigate("/" + path);
 
     }; 
+
+    const getUserDetails = async () => {
+
+      try {
+
+        const uid = getAuth().currentUser?.uid || "";
+
+        if (!uid) {
+          console.log("No user is logged in");
+          return;
+        }
+        const ref = doc(db, "users", uid);
+        const snapshot = await getDoc(ref);
+
+        if (!snapshot.exists()) {
+            console.error("Error occured: No database document found");
+            return;
+        }
+
+        const data = snapshot.data() as { firstname?: string, income?: { totalIncome?: number } };
+
+        setUserDetails((prev) => ({
+            ...prev,
+            firstname: (", " + data.firstname) || "",
+            totalBalance: data.income?.totalIncome || 0,
+        }));
+
+      } catch (e) {
+
+        console.log("Error occured: " + e);
+
+      }
+
+    }
+
+    useEffect(() => {
+
+      try {
+
+        getUserDetails();
+
+
+      } catch (e) {
+
+        console.log("Error occured: " + e);
+
+      }
+
+    }, []);
   
 
 
@@ -28,17 +85,17 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <div className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
         
         <div className={styles.headerSection}>
-          <p className={styles.greeting}>Welcome, (name)</p>
+          <p className={styles.greeting}>Welcome {userDetails.firstname}</p>
           
           <div className={styles.balanceSection}>
             <p className={styles.balanceLabel}>BALANCE LEFT</p>
-            <h2 className={styles.balanceAmount}>R 5 350.00</h2>
+            <h2 className={styles.balanceAmount}>R {userDetails.totalBalance}</h2>
             
             <div className={styles.progressBarContainer}>
               <div className={styles.progressBarFill} style={{ width: '22%' }}></div>
             </div>
             
-            <p className={styles.progressText}>22% of your monthly limit used</p>
+            <p className={styles.progressText}>0% of your monthly limit used</p>
           </div>
         </div>
 

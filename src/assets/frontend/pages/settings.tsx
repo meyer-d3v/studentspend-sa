@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from "../styles/Settings.module.css";
+import { getAuth } from 'firebase/auth';
+import { replace, useNavigate } from 'react-router-dom';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
+import { getDoc, doc, updateDoc } from 'firebase/firestore';
+
+type User = {
+  firstname: string,
+  lastname: string,
+  email: string,
+  institution: string,
+  yearOfStudy: string,
+  cityCampus: string,
+}
 
 const Settings: React.FC = () => {
 
@@ -18,25 +32,54 @@ const Settings: React.FC = () => {
     }
   }); 
 
+  const navigate = useNavigate();
+  const uid = getAuth().currentUser?.uid || "";
+
   const updateUserData = async () => {
 
     try {
 
+      const ref = doc(db, "users", uid);
+
+      await updateDoc(ref, {
+        firstname: userData.firstname,
+        lastname: userData.lastname,
+        email: userData.email,
+        institution: userData.institution,
+        yearOfStudy: userData.yearOfStudy,
+        cityCampus: userData.cityCampus,
+      });
+
+      console.log("User data updated");
+
 
     } catch (e) {
 
+      console.log("Error occured" + e);
 
     }
 
   }
 
-  const deleteAccount = async () => {
+  const deactivateAccount = async () => {
 
     try {
 
 
+      const ref = doc(db, "users", uid);
+
+      await updateDoc(ref, {
+        isActive: false
+      });
+
+      signUserOut();
+
+      console.log("User account has been deactivated");
+
+
     } catch (e) {
 
+      console.log("User account cound not be deactivated");
 
     }
 
@@ -46,9 +89,13 @@ const Settings: React.FC = () => {
 
     try {
 
+      await getUserData();
+
+      console.log("User data has been reset");
 
     } catch (e) {
 
+      console.log("User data could not be resetted");
 
     }
 
@@ -58,13 +105,62 @@ const Settings: React.FC = () => {
 
     try {
 
+      getAuth().signOut;
+      console.log("User logging out");
+      replace("/");
+      return;
 
     } catch (e) {
 
+      console.log("Could not sign user out");
 
     }
 
   }
+
+  const getUserData = async () => {
+
+    try {
+
+      if (!uid) {
+
+        console.log("User not logged in");
+        navigate("/");
+        return;
+
+      }
+
+      const ref = doc(db, "users", uid);
+      const snapshot = await getDoc(ref);
+
+      const data = snapshot.data() as User;
+
+      setUserData((prev) => ({
+        ...prev,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+        institution: data.institution,
+        yearOfStudy: data.yearOfStudy,
+        cityCampus: data.cityCampus,
+      }))
+
+
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }
+
+
+  useEffect(() => {
+
+    getUserData();
+
+  }, []);
 
   
 
@@ -82,7 +178,7 @@ const Settings: React.FC = () => {
               <div className={styles.avatar}>{userData.firstname.charAt(0) + userData.lastname.charAt(0)}</div>
               <div className={styles.profileInfo}>
                 <h2 className={styles.profileName}>{userData.firstname}</h2>
-                <p className={styles.profileStudentNum}>Student number 000000000</p>
+                {/*<p className={styles.profileStudentNum}>Student number 000000000</p>*/}
               </div>
               <button className={styles.linkBtn}>Change photo</button>
             </div>
@@ -220,8 +316,8 @@ const Settings: React.FC = () => {
               <button className={styles.outlineBtn}>
                 Download my<br/>data
               </button>
-              <button className={styles.dangerBtn} onClick={() => deleteAccount()}>
-                Delete<br/>account
+              <button className={styles.dangerBtn} onClick={() => deactivateAccount()}>
+                Deactivate<br/>account
               </button>
             </div>
           </div>

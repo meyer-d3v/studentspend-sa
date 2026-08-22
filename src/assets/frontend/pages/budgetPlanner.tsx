@@ -26,6 +26,20 @@ const BudgetPlanner: React.FC = () => {
     }
   });
 
+  const [activeToggle, setActiveToggle] = useState<String>("monthly");
+
+  const getUserInformation = async () => {
+
+    try {
+
+
+    } catch (e) {
+
+
+    }
+
+  }
+
   const saveBudget = async () => {
 
     try {
@@ -63,6 +77,8 @@ const BudgetPlanner: React.FC = () => {
 
     try {
 
+      getUserInformation();
+
 
     } catch (e) {
 
@@ -77,8 +93,19 @@ const BudgetPlanner: React.FC = () => {
       <header className={styles.header}>
         <h1 className={styles.pageTitle}>Budget planner</h1>
         <div className={styles.toggleGroup}>
-          <button className={`${styles.toggleBtn} ${styles.activeToggle}`}>Monthly</button>
-          <button className={styles.toggleBtn}>Weekly</button>
+          <button 
+            className={`${styles.toggleBtn} ${activeToggle === "monthly" && styles.activeToggle}`}
+            onClick={() => setActiveToggle("monthly")}
+          >
+            Monthly
+          </button>
+          
+          <button 
+            className={`${styles.toggleBtn} ${activeToggle === "weekly" && styles.activeToggle}`}
+            onClick={() => setActiveToggle("weekly")}
+          >
+            Weekly
+          </button>
         </div>
       </header>
 
