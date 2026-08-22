@@ -148,9 +148,12 @@ const Dashboard: React.FC = () => {
                   </tbody>
                 </table>
               )}
-              <div className={styles.viewAllExpenses}>
-                <div onClick={() => navigateToPage("expenses")}>View all expenses</div>
-              </div>
+
+              {userExpenses.length !== 0 && (
+                <div className={styles.viewAllExpenses}>
+                  <div onClick={() => navigateToPage("expenses")}>View all expenses</div>
+                </div>
+              )}
             </div>
           </div>
   
