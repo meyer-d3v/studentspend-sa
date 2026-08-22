@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+
+type Expenses = {
+  date: Date,
+  item: string,
+  category: string,
+  amount: number
+}
 
 const AddExpensePage: React.FC = () => {
 
@@ -14,7 +21,7 @@ const AddExpensePage: React.FC = () => {
     catagory: "",
     notes: "",
   });
-
+  const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);
   const [activeSelection, setActiveSelection] = useState<string>("");
 
   const catagories = [
@@ -51,6 +58,42 @@ const AddExpensePage: React.FC = () => {
     }
 
   };
+
+  const getUserData = async () => {
+  
+    try {
+
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "expenses", uid);
+      const snapshot = await getDoc(ref);
+
+
+      const data = snapshot?.data() as unknown as Array<Expenses>;
+
+      setUserExpenses(data || []);
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }
+
+
+  useEffect(() => {
+
+    try {
+
+      getUserData();
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }, []);
 
 
   return (
@@ -229,18 +272,22 @@ const AddExpensePage: React.FC = () => {
             <h3 className={styles.widgetTitle}>Similar recent entries</h3>
             
             <ul className={styles.recentList}>
-              <li className={styles.recentItem}>
-                <span className={styles.recentDesc}>Groceries at Shoprite</span>
-                <span className={styles.recentAmount}>R 178.00</span>
-              </li>
-              <li className={styles.recentItem}>
-                <span className={styles.recentDesc}>Groceries at Boxer</span>
-                <span className={styles.recentAmount}>R 142.50</span>
-              </li>
-              <li className={styles.recentItem}>
-                <span className={styles.recentDesc}>Groceries at Pick n Pay</span>
-                <span className={styles.recentAmount}>R 205.00</span>
-              </li>
+              
+              {userExpenses.length !== 0 ? (
+                userExpenses.map((expense, index) => (
+                  <li key={index} className={styles.recentItem}>
+                    <span className={styles.recentDesc}>{expense.item}</span>
+                    <span className={styles.recentAmount}>R {expense.amount}</span>
+                  </li>
+                ))
+              )
+              :
+              (
+                <li className={styles.recentItem}>
+                  <span className={styles.recentDesc}>No recent expenses</span>
+                  <span className={styles.recentAmount}></span>
+                </li>
+              )}
             </ul>
           </div>
 

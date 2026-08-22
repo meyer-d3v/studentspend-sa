@@ -175,7 +175,7 @@ const Settings: React.FC = () => {
           {/* Profile Details Card */}
           <div className={styles.card}>
             <div className={styles.profileHeader}>
-              <div className={styles.avatar}>{userData.firstname.charAt(0) + userData.lastname.charAt(0)}</div>
+              <div className={styles.avatar}>{userData.firstname !== "" ? (userData.firstname?.charAt(0) + userData.lastname?.charAt(0)) : ""}</div>
               <div className={styles.profileInfo}>
                 <h2 className={styles.profileName}>{userData.firstname}</h2>
                 {/*<p className={styles.profileStudentNum}>Student number 000000000</p>*/}
