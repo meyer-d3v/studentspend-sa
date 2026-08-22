@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { setDoc, doc, getDoc } from 'firebase/firestore';
+import { setDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 type Expenses = {
@@ -47,6 +47,7 @@ const AddExpensePage: React.FC = () => {
         description: formData.description,
         catagory: formData.catagory,
         notes: formData.notes,
+        createdAt: serverTimestamp()
       });
 
       console.log("Data saved to database");

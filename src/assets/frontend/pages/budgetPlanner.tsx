@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styles from "../styles/BudgetPlanner.module.css";
+import { getAuth } from 'firebase/auth';
+import { getDoc, doc } from 'firebase/firestore';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
 
 const categories = [
   { name: 'Transport', percentage: '15', amount: '900' },
@@ -32,9 +36,27 @@ const BudgetPlanner: React.FC = () => {
 
     try {
 
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "users", uid);
+      const snapshot = await getDoc(ref);
+
+      if (!snapshot.exists()) {
+          console.error("Error occured: No database document found");
+          //setError("Error occured: No database document found");
+          return false;
+      }
+
+      const data = snapshot.data() as { email?: string, income?: { totalIncome?: number, weeklyIncome?: number }  };
+
+      setUserData((prev) => ({
+          ...prev,
+          monthlyIncome: data.income?.totalIncome || 0,
+          weeklyIncome: data.income?.weeklyIncome || 0
+      }));
 
     } catch (e) {
 
+      console.log("Error occured: " + e);
 
     }
 

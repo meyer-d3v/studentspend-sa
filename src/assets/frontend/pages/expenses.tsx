@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-
+/*
 const expensesData = [
   { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: 'R 190.00' },
   { date: '25 Oct', item: 'Taxi to campus', category: 'Transport', amount: 'R 34.00' },
@@ -16,6 +16,7 @@ const expensesData = [
   { date: '20 Oct', item: 'Airtime top up', category: 'Data', amount: 'R 60.00' },
   { date: '19 Oct', item: 'Bus fare', category: 'Transport', amount: 'R 25.00' },
 ];
+*/
 
 const categoryData = [
   { name: 'Food', amount: 'R 668.00', percentage: '100%' },
@@ -35,6 +36,7 @@ const Expenses: React.FC = () => {
 
 
   const [userExpenses, setUserExpenses] = useState<Expenses[]>([]);
+  const [totalAmountForExpenses, setTotalAmountForExpense] = useState<number>(0);
   const [filtered, setFiltered] = useState<Expenses[]>([]);
   const [search, setSearch] = useState<String>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -66,6 +68,16 @@ const Expenses: React.FC = () => {
       const data = snapshot.data() as Expenses[];
 
       setUserExpenses(data);
+
+      let total = 0;
+
+      userExpenses.forEach(e => {
+
+        total = total + e.amount;
+
+      });
+
+      setTotalAmountForExpense(total);
 
 
     } catch (e) {
@@ -177,6 +189,7 @@ const Expenses: React.FC = () => {
               <tbody>
                 {!loading ? (
                   <>
+                  {/*
                   {expensesData.map((expense, index) => (
                     <tr key={index}>
                       <td className={styles.textMuted}>{expense.date}</td>
@@ -190,6 +203,7 @@ const Expenses: React.FC = () => {
                       </td>
                     </tr>
                   ))}
+                  */}
   
   
                   {(filtered.entries.length != 0 ? filtered : userExpenses).map((expense, index) => (
@@ -200,9 +214,11 @@ const Expenses: React.FC = () => {
                       <td className={`${styles.textRight} ${styles.textBold}`}>
                         {expense.amount}
                       </td>
+                      {/*
                       <td className={styles.textRight}>
                         <button className={styles.editLink}>Edit</button>
                       </td>
+                      */}
                     </tr>
                   ))}
                   </>
@@ -244,7 +260,7 @@ const Expenses: React.FC = () => {
 
           <div className={styles.summaryFooter}>
             <span className={styles.totalLabel}>Total</span>
-            <span className={styles.totalAmount}>R 1 350.00</span>
+            <span className={styles.totalAmount}>R {totalAmountForExpenses}</span>
           </div>
         </div>
 
