@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { auth } from '../../backend/firebaseConfig/config';
 import styles from "../styles/LandingPage.module.css";
+import image from "../images/dashboard_example.png";
 
 const LandingPage: React.FC = () => {
 
@@ -66,11 +67,14 @@ const LandingPage: React.FC = () => {
                 </section>
 
                 <section className={styles.imageSection}>
+                    <img src={image} className={styles.image}/>
+                    {/*
                     <div className={styles.placeholderContainer}>
                         <div className={styles.placeholderBadge}>
                             dashboard screenshot goes here
                         </div>
                     </div>
+                    */}
                 </section>
             </main>
         </div>
