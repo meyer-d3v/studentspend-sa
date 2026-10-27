@@ -63,6 +63,7 @@ const Dashboard: React.FC = () => {
     { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
     { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
     { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+    { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
   ];
 
   const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);

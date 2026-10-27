@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy } from 'firebase/firestore';
+import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 type Expenses = {
@@ -24,15 +24,7 @@ const AddExpensePage: React.FC = () => {
   });
   const [userExpenses, setUserExpenses] = useState<Expenses[]>([]);
   const [activeSelection, setActiveSelection] = useState<string>("");
-
-  const categories = [
-    "Transport",
-    "Food",
-    "Rent",
-    "Data & Airtime",
-    "Groceries",
-    "Other",
-  ];
+  const [error, setError] = useState<String | null>(null);
 
   const saveData = async () => {
 
@@ -40,7 +32,16 @@ const AddExpensePage: React.FC = () => {
 
       const uid = getAuth().currentUser?.uid || "";
       const expensesRef = collection(db, "expenses");
-      const budgetRef = doc(db, "budget_planner", uid)
+      const budgetRef = doc(db, "budget_planner", uid);
+
+      const budgetSnapshot = await getDoc(budgetRef);
+      
+      if (!budgetSnapshot.exists()) {
+
+        setError("Create a budget planner first");
+        return;
+
+      } 
 
       await addDoc(expensesRef, {
         userId: uid,
@@ -114,6 +115,12 @@ const AddExpensePage: React.FC = () => {
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>Add new expense</h1>
 
+      {error && (
+          <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+              {error}
+          </div>
+      )}
+
       <div className={styles.layout}>
         {/* Left Column: Form Panel */}
         <div className={styles.formCard}>
@@ -168,53 +175,98 @@ const AddExpensePage: React.FC = () => {
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "transport" && styles.activeChip}`}
-                onClick={() => setActiveSelection("transport")}
+                onClick={() => {
+                  
+                  setActiveSelection("transport");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "transport"
+                  }))}
+                }
+
               >
                 Transport
               </button>
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "food" && styles.activeChip}`}
-                onClick={() => setActiveSelection("food")}
+                onClick={() => {
+                  
+                  setActiveSelection("food");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "food"
+                  }))}
+                }
+
               >
                 Food
               </button>
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "rent" && styles.activeChip}`}
-                onClick={() => setActiveSelection("rent")}
+                onClick={() => {
+                  
+                  setActiveSelection("rent");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "rent"
+                  }))}
+                }
+
               >
                 Rent
               </button>
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "dataAndAirtime" && styles.activeChip}`}
-                onClick={() => setActiveSelection("dataAndAirtime")}
+                onClick={() => {
+                  
+                  setActiveSelection("dataAndAirtime");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "dataAndAirtime"
+                  }))}
+                }
+
               >
                 Data and airtime
               </button>
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "groceries" && styles.activeChip}`}
-                onClick={() => setActiveSelection("groceries")}
+                onClick={() => {
+                  
+                  setActiveSelection("groceries");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "groceries"
+                  }))}
+                }
+
               >
                 Groceries
               </button>
               
               <button 
                 className={`${styles.categoryChip} ${activeSelection === "entertainment" && styles.activeChip}`}
-                onClick={() => setActiveSelection("entertainment")}
-              >
-                Entertainment
-              </button>
-              
-              <button 
-                className={`${styles.categoryChip} ${activeSelection === "tuition" && styles.activeChip}`}
-                onClick={() => setActiveSelection("tuition")}
-              >
-                Tuition
-              </button>
+                onClick={() => {
+                  
+                  setActiveSelection("entertainment");
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: "other"
+                  }))}
+                }
 
+              >
+                Other
+              </button>
+            
+
+
+
+              {/*}
               {categories.map((c) => (
                 <button 
                   key={c}
@@ -231,6 +283,8 @@ const AddExpensePage: React.FC = () => {
                   {c}
                 </button>
               ))}
+
+              */}
 
             </div>
           </div>

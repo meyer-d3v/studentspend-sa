@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import styles from "../styles/Expenses.module.css";
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
-import { getDocs, query, where, collection } from 'firebase/firestore';
+import { getDocs, query, where, collection, deleteDoc, doc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
+import { Trash2 } from 'lucide-react';
 /*
 const expensesData = [
   { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: 'R 190.00' },
@@ -133,6 +134,24 @@ const Expenses: React.FC = () => {
 
   }
 
+  const deleteExpense = async (id: string) => {
+
+    try {
+
+      const ref = doc(db, "expenses", id);
+
+      await deleteDoc(ref);
+
+      fetchUserExpenses();
+
+    } catch (e) {
+
+      setError("Error occured trying to delete expense. Error: " + e);
+
+    }
+
+  }
+
 
   useEffect(() => {
 
@@ -221,8 +240,8 @@ const Expenses: React.FC = () => {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Item</th>
                   <th>Category</th>
+                  <th>Description</th>
                   <th className={styles.textRight}>Amount</th>
                   <th className={styles.textRight}>Actions</th>
                 </tr>
@@ -249,17 +268,29 @@ const Expenses: React.FC = () => {
   
                   {(filtered.entries.length != 0 ? filtered : userExpenses).map((expense: any, index: any) => (
                     <tr key={index}>
-                      <td className={styles.textMuted}>{expense.date.toDateString()}</td>
-                      <td className={styles.textDark}>{expense.item}</td>
+                      <td className={styles.textMuted}>
+                      {
+                        expense.date?.toDate 
+                          ? expense.date.toDate().toDateString() 
+                          : new Date(expense.date).toDateString()
+                      }
+                      </td>
                       <td className={styles.textMuted}>{expense.category}</td>
+                      <td className={styles.textDark}>{expense.description}</td>
                       <td className={`${styles.textRight} ${styles.textBold}`}>
                         {expense.amount}
                       </td>
-                      {/*
+                      
+                      {/* replace with icon */}
                       <td className={styles.textRight}>
-                        <button className={styles.editLink}>Edit</button>
+                        <button 
+                          className={styles.editLink}
+                          onClick={() => deleteExpense(expense.id)}
+                        >
+                          <Trash2 />
+                        </button>
                       </td>
-                      */}
+                      
                     </tr>
                   ))}
                   </>

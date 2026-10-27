@@ -32,7 +32,7 @@ const BudgetPlanner: React.FC = () => {
     }
   });
 
-  const [activeToggle, setActiveToggle] = useState<String>("monthly");
+  const [activeToggle, setActiveToggle] = useState<String>("weekly");
 
   const getUserInformation = async () => {
 
@@ -202,19 +202,31 @@ const BudgetPlanner: React.FC = () => {
 
         {/* Total Budget Card */}
         <div className={styles.card}>
-          <span className={styles.cardLabel}>Total budget</span>
+          <span className={styles.cardLabel}>Total budget {userData.monthlyLimit === 0 && "(Please set a monthly limit before assigning categories)"}</span>
           <div className={styles.inputGroupLarge}>
             <span className={styles.currencyPrefix}>R</span>
             <input 
               type="text" 
               className={styles.amountInput} 
               value={userData.monthlyLimit} 
-              onChange={(e) => setUserData((prev) => ({
+              onChange={(e) => {
+                
+                let newValue = parseInt(e.target.value);
+                if (isNaN(newValue)) {
+                  newValue = 0;
+                }
+
+                if (newValue > userData.monthlyIncome) {
+                  alert("Budget cannot be more than income.")
+                  return;
+                }
+
+                setUserData((prev) => ({
                 ...prev,
-                monthlyLimit: e.target.valueAsNumber,
-                weeklyLimit: (e.target.valueAsNumber / 4)
-              }))}
-              placeholder="0" 
+                monthlyLimit: parseInt(e.target.value),
+                weeklyLimit: (parseInt(e.target.value) / 4)
+              }))}}
+              placeholder={userData.monthlyLimit !== 0 ? userData.monthlyLimit.toString() : "0"} 
             />
           </div>
         </div>
@@ -224,7 +236,7 @@ const BudgetPlanner: React.FC = () => {
           <>
             <div className={styles.card}>
               <span className={styles.cardLabel}>Monthly limit, calculated</span>
-              <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.monthlyIncome}</div>
+              <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.monthlyLimit}</div>
             </div>
           </>
         )
@@ -243,7 +255,24 @@ const BudgetPlanner: React.FC = () => {
         <div className={styles.panelHeader}>
           <h2 className={styles.panelTitle}>Category allocations</h2>
           <span className={styles.textGreen}>R 
-            {userData.monthlyLimit} left to allocate</span>
+            {(userData.monthlyLimit - 
+              userData.catagoryAllocations.dataAndAirtime -
+              userData.catagoryAllocations.food -
+              userData.catagoryAllocations.groceries -
+              userData.catagoryAllocations.rent -
+              userData.catagoryAllocations.transport -
+              userData.catagoryAllocations.other) >= 0 ?
+            
+              (userData.monthlyLimit - 
+                userData.catagoryAllocations.dataAndAirtime -
+                userData.catagoryAllocations.food -
+                userData.catagoryAllocations.groceries -
+                userData.catagoryAllocations.rent -
+                userData.catagoryAllocations.transport -
+                userData.catagoryAllocations.other)
+              :
+              0
+            } left to allocate</span>
         </div>
 
         <div className={styles.categoryGrid}>
@@ -281,16 +310,15 @@ const BudgetPlanner: React.FC = () => {
 
           
             <div className={styles.categoryItem}>
-              
               <div className={styles.categoryLeft}>
                 <div className={styles.categoryHeader}>
                   <span className={styles.categoryName}>Transport</span>
-                  <span className={styles.categoryPercent}>{((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2)}% of budget</span>
+                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2)}%` }}
+                    style={{ width: `${userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -302,11 +330,212 @@ const BudgetPlanner: React.FC = () => {
                     type="text" 
                     className={styles.amountInput} 
                     placeholder={userData.catagoryAllocations.transport.toString()} 
+
+                    onChange={(e) => {
+
+                      //console.log("Input: " + e.target.valueAsNumber + parseInt(e.target.value))
+
+                      let newValue = parseInt(e.target.value);
+                      if (isNaN(newValue)) {
+                          newValue = 0;
+                      }
+
+                      setUserData((prev) => ({
+                        ...prev,
+                        catagoryAllocations: {
+                          ...prev.catagoryAllocations,
+                          transport: newValue
+                        }
+                      }))
+                      
+                    }}
                   />
                 </div>
               </div>
-
             </div>
+
+            <div className={styles.categoryItem}>
+              <div className={styles.categoryLeft}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>Food</span>
+                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div 
+                    className={styles.progressBarFill} 
+                    style={{ width: `${userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className={styles.categoryRight}>
+                <div className={styles.inputGroupSmall}>
+                  <span className={styles.currencyPrefix}>R</span>
+                  <input 
+                    type="text" 
+                    className={styles.amountInput} 
+                    placeholder={userData.catagoryAllocations.food.toString()} 
+
+                    onChange={(e) => {
+
+                      //console.log("Input: " + e.target.valueAsNumber + parseInt(e.target.value))
+
+                      let newValue = parseInt(e.target.value);
+                      if (isNaN(newValue)) {
+                          newValue = 0;
+                      }
+
+                      setUserData((prev) => ({
+                        ...prev,
+                        catagoryAllocations: {
+                          ...prev.catagoryAllocations,
+                          food: newValue
+                        }
+                      }))
+                      
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.categoryItem}>
+              <div className={styles.categoryLeft}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>Data and Airtime</span>
+                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div 
+                    className={styles.progressBarFill} 
+                    style={{ width: `${userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className={styles.categoryRight}>
+                <div className={styles.inputGroupSmall}>
+                  <span className={styles.currencyPrefix}>R</span>
+                  <input 
+                    type="text" 
+                    className={styles.amountInput} 
+                    placeholder={userData.catagoryAllocations.dataAndAirtime.toString()} 
+
+                    onChange={(e) => {
+
+                      //console.log("Input: " + e.target.valueAsNumber + parseInt(e.target.value))
+
+                      let newValue = parseInt(e.target.value);
+                      if (isNaN(newValue)) {
+                          newValue = 0;
+                      }
+
+                      setUserData((prev) => ({
+                        ...prev,
+                        catagoryAllocations: {
+                          ...prev.catagoryAllocations,
+                          dataAndAirtime: newValue
+                        }
+                      }))
+                      
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.categoryItem}>
+              <div className={styles.categoryLeft}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>Groceries</span>
+                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div 
+                    className={styles.progressBarFill} 
+                    style={{ width: `${userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className={styles.categoryRight}>
+                <div className={styles.inputGroupSmall}>
+                  <span className={styles.currencyPrefix}>R</span>
+                  <input 
+                    type="text" 
+                    className={styles.amountInput} 
+                    placeholder={userData.catagoryAllocations.groceries.toString()} 
+
+                    onChange={(e) => {
+
+                      //console.log("Input: " + e.target.valueAsNumber + parseInt(e.target.value))
+
+                      let newValue = parseInt(e.target.value);
+                      if (isNaN(newValue)) {
+                          newValue = 0;
+                      }
+
+                      setUserData((prev) => ({
+                        ...prev,
+                        catagoryAllocations: {
+                          ...prev.catagoryAllocations,
+                          groceries: newValue
+                        }
+                      }))
+                      
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.categoryItem}>
+              <div className={styles.categoryLeft}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>Other</span>
+                  <span className={styles.categoryPercent}>{userData?.monthlyLimit > 0 && userData?.catagoryAllocations.other > 0
+                    ? ((userData?.catagoryAllocations.other / userData?.monthlyLimit) * 100).toFixed(2) 
+                    : "0"}% of budget</span>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div 
+                    className={styles.progressBarFill} 
+                    style={{ width: `${userData.catagoryAllocations.other !== 0 ? ((userData.catagoryAllocations.other / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className={styles.categoryRight}>
+                <div className={styles.inputGroupSmall}>
+                  <span className={styles.currencyPrefix}>R</span>
+                  <input 
+                    type="text" 
+                    className={styles.amountInput} 
+                    placeholder={userData.catagoryAllocations.other.toString()} 
+
+                    onChange={(e) => {
+
+                      //console.log("Input: " + e.target.valueAsNumber + parseInt(e.target.value))
+
+                      let newValue = parseInt(e.target.value);
+                      if (isNaN(newValue)) {
+                          newValue = 0;
+                      }
+
+                      setUserData((prev) => ({
+                        ...prev,
+                        catagoryAllocations: {
+                          ...prev.catagoryAllocations,
+                          other: newValue
+                        }
+                      }))
+                      
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
         </div>
 
         {/* Action Buttons */}

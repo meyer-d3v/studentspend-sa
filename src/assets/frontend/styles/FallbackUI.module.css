@@ -60,7 +60,7 @@
 .iconContainer {
   width: 4rem;              /* 64px */
   height: 4rem;             /* 64px */
-  background-color: rgba(140, 8, 36);/* Replace with your actual 'bg-gradient-primary' value */
+  background-color: #2b577a;/* Replace with your actual 'bg-gradient-primary' value */
   border-radius: 0.75rem;   /* 12px */
   display: flex;
   align-items: center;
@@ -68,7 +68,7 @@
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 1rem;      /* 16px */
-  box-shadow: 0 0 10px rgba(140, 8, 36, 0.5);
+  box-shadow: 0 0 10px #2b577a;
 }
 
 .title_container {
