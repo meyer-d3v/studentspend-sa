@@ -13,6 +13,12 @@ type User = {
   institution: string,
   yearOfStudy: string,
   cityCampus: string,
+  income: {
+    nsfasAllowance: number,
+    partTimeWork: number,
+    familySupport: number,
+    totalIncome: number,
+  }
 }
 
 const Settings: React.FC = () => {
@@ -143,6 +149,12 @@ const Settings: React.FC = () => {
         institution: data.institution,
         yearOfStudy: data.yearOfStudy,
         cityCampus: data.cityCampus,
+        income: {
+          nsfasAllowance: data.income.nsfasAllowance,
+          partTimeWork: data.income.partTimeWork,
+          familySupport: data.income.familySupport,
+          totalIncome: data.income.totalIncome,
+        }
       }))
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from "../styles/BudgetPlanner.module.css";
 import { getAuth } from 'firebase/auth';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc, setDoc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 
@@ -62,9 +62,65 @@ const BudgetPlanner: React.FC = () => {
 
   }
 
+  const getUserBudget = async () => {
+
+    try {
+
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "budget_planner", uid);
+      const snapshot = await getDoc(ref);
+
+      if (!snapshot.exists()) {
+          console.error("Error occured: No database document found");
+          //setError("Error occured: No database document found");
+          return false;
+      }
+
+      const data = snapshot.data() as {
+        transport: number,
+        food: number, 
+        rent: number,
+        dataAndAirtime: number,
+        groceries: number,
+        other: number,
+      };
+
+      setUserData((prev) => ({
+          ...prev,
+          catagoryAllocations: {
+            transport: data.transport,
+            food: data.food, 
+            rent: data.rent,
+            dataAndAirtime: data.dataAndAirtime,
+            groceries: data.groceries,
+            other: data.other,
+          }
+      }));
+
+    } catch (e) {
+
+      console.log("Error occured: " + e);
+
+    }
+
+  }
+
   const saveBudget = async () => {
 
     try {
+
+      const uid = getAuth().currentUser?.uid || "";
+      const ref = doc(db, "budget_planner", uid);
+      await setDoc(ref, {
+        
+        transport: userData.catagoryAllocations.transport,
+        food: userData.catagoryAllocations.food, 
+        rent: userData.catagoryAllocations.rent,
+        dataAndAirtime: userData.catagoryAllocations.dataAndAirtime,
+        groceries: userData.catagoryAllocations.groceries,
+        other: userData.catagoryAllocations.groceries,
+        
+      });
 
 
     } catch (e) {
@@ -72,6 +128,7 @@ const BudgetPlanner: React.FC = () => {
 
     } finally {
 
+      console.log("Data saved successfully");
       
     }
 
@@ -81,12 +138,11 @@ const BudgetPlanner: React.FC = () => {
 
     try {
 
+      await getUserBudget();
 
     } catch (e) {
 
-
-    } finally {
-
+      console.log("Error retrieving user budget. Error: " + e);
 
     }
 
@@ -100,10 +156,11 @@ const BudgetPlanner: React.FC = () => {
     try {
 
       getUserInformation();
-
+      getUserBudget();
 
     } catch (e) {
 
+      console.log("Error retrieving user budget. Error: " + e);
 
     }
 

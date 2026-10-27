@@ -12,6 +12,23 @@ interface SidebarProps {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+type BudgetPlanner = {
+  transport: number,
+  food: number, 
+  rent: number,
+  dataAndAirtime: number,
+  groceries: number,
+  other: number,
+  spentTotals: {
+    transport: number,
+    food: number, 
+    rent: number,
+    dataAndAirtime: number,
+    groceries: number,
+    other: number,
+  }
+}
+
 
 const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
@@ -19,6 +36,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const [activeTab, setActiveTab] = useState<string>("dashboard");
     const [userDetails, setUserDetails] = useState({
       firstname: "",
+      balanceLeft: 0,
       totalBalance: 0,
     });
 
@@ -62,11 +80,43 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
     }
 
+    const getUserBalance = async () => {
+
+      try {
+
+        const uid = getAuth().currentUser?.uid || "";
+        const budgetRef = doc(db, "budget_planner", uid);
+        const budgetSnapshot = await getDoc(budgetRef);
+  
+        const data = budgetSnapshot.data() as BudgetPlanner || [];
+
+        const balanceLeft = (
+          data.spentTotals.dataAndAirtime +
+          data.spentTotals.food +
+          data.spentTotals.groceries +
+          data.spentTotals.other +
+          data.spentTotals.rent +
+          data.spentTotals.transport
+        );
+
+        setUserDetails((prev) => ({
+          ...prev,
+          balanceLeft: balanceLeft,
+        }))
+
+
+      } catch (e) {
+
+        console.log("Error occured getting balance. Error: " + e);
+      }
+    }
+
     useEffect(() => {
 
       try {
 
         getUserDetails();
+        getUserBalance();
 
 
       } catch (e) {
@@ -89,13 +139,13 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           
           <div className={styles.balanceSection}>
             <p className={styles.balanceLabel}>BALANCE LEFT</p>
-            <h2 className={styles.balanceAmount}>R {userDetails.totalBalance}</h2>
+            <h2 className={styles.balanceAmount}>R {userDetails.balanceLeft}</h2>
             
             <div className={styles.progressBarContainer}>
-              <div className={styles.progressBarFill} style={{ width: '22%' }}></div>
+              <div className={styles.progressBarFill} style={{ width: `${((userDetails.balanceLeft / userDetails.totalBalance) * 100).toFixed(2)}%` }}></div>
             </div>
             
-            <p className={styles.progressText}>0% of your monthly limit used</p>
+            <p className={styles.progressText}>{((userDetails.balanceLeft / userDetails.totalBalance) * 100).toFixed(2)}% of your monthly limit used</p>
           </div>
         </div>
 

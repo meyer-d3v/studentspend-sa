@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { setDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { setDoc, doc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 type Expenses = {
@@ -18,20 +18,19 @@ const AddExpensePage: React.FC = () => {
     date: "",
     amount: 0,
     description: "",
-    catagory: "",
+    category: "",
     notes: "",
   });
   const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);
   const [activeSelection, setActiveSelection] = useState<string>("");
 
-  const catagories = [
+  const categories = [
     "Transport",
     "Food",
     "Rent",
     "Data & Airtime",
     "Groceries",
-    "Entertainment",
-    "Tuition"
+    "Other",
   ];
 
   const saveData = async () => {
@@ -39,15 +38,21 @@ const AddExpensePage: React.FC = () => {
     try {
 
       const uid = getAuth().currentUser?.uid || "";
-      const ref = doc(db, "expenses", uid);
+      const expensesRef = doc(db, "expenses");
+      const budgetRef = doc(db, "budget_planner", uid)
 
-      await setDoc(ref, {
+      await setDoc(expensesRef, {
+        userId: uid,
         date: formData.date,
         amount: formData.amount,
         description: formData.description,
-        catagory: formData.catagory,
+        category: formData.category,
         notes: formData.notes,
         createdAt: serverTimestamp()
+      });
+
+      await updateDoc(budgetRef, {
+        [`spentTotals.${(formData.category).toLowerCase()}`]: increment(formData.amount)
       });
 
       console.log("Data saved to database");
@@ -202,7 +207,7 @@ const AddExpensePage: React.FC = () => {
                 Tuition
               </button>
 
-              {catagories.map((c) => (
+              {categories.map((c) => (
                 <button 
                   key={c}
                   value={c}

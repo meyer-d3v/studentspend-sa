@@ -1,6 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from "../styles/Alerts.module.css";
+import { collection, getDocs, query, where, type Timestamp, orderBy, getDoc, doc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
 
+type Alerts = {
+  id: string,
+  status: string,
+  title: string,
+  description: string
+  createdAt: Timestamp
+}
+
+/*
 const alertsData = [
   {
     status: 'warning',
@@ -33,6 +46,7 @@ const alertsData = [
     description: 'You are at 50% of your data and airtime allocation halfway through the month.'
   }
 ];
+*/
 
 const settingsData = [
   {
@@ -59,6 +73,77 @@ const settingsData = [
 
 const Alerts: React.FC = () => {
 
+  const [warningLevel, setWarningLevel] = useState<number>(80);
+  const [userAlerts, setUserAlerts] = useState<Alerts[]>([]);
+
+  const getUserAlerts = async () => {
+
+    try {
+
+      const uid = getAuth().currentUser?.uid;
+      const ref = collection(db, "alerts");
+      const alertsQuery = query(ref, 
+        where("userId", "==", uid),
+        orderBy("createdAt", "desc"),
+      )
+
+      const alertSnapshot = await getDocs(alertsQuery);
+
+      const data = alertSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setUserAlerts(data as any || []);
+
+
+    } catch (e) {
+
+      console.log("Error occured while trying fetch user alerts. Error: " + e);
+
+    }
+
+  }
+
+  const getUserWarningLevel = async () => {
+
+    try {
+
+      const uid = getAuth().currentUser?.uid;
+      if (!uid) return;
+      const ref = doc(db, "users", uid);
+      const snapshot = await getDoc(ref);
+
+      const data = snapshot.data();
+
+      setWarningLevel((data as any)?.warningLevel as number || 80)
+
+
+    } catch (e) {
+
+      console.log("Error occured while trying fetch user warning level. Error: " + e);
+
+    }
+
+  }
+
+  useEffect(() => {
+
+    try {
+
+      getUserAlerts();
+      getUserWarningLevel();
+
+    } catch (e) {
+
+      console.log("Error occured while trying fetch user alerts. Error: " + e);
+
+    }
+
+  }, []);
+
+
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -70,18 +155,48 @@ const Alerts: React.FC = () => {
       <div className={styles.layout}>
         {/* Left Column: Alerts List */}
         <div className={styles.alertsCard}>
-          {alertsData.map((alert, index) => (
-            <div key={index} className={styles.alertItem}>
-              <div className={styles.alertHeader}>
-                <div className={styles.titleGroup}>
-                  <span className={`${styles.statusDot} ${styles[alert.status]}`}></span>
-                  <h3 className={styles.alertTitle}>{alert.title}</h3>
+          
+          {/*
+            {alertsData.map((alert, index) => (
+              <div key={index} className={styles.alertItem}>
+                <div className={styles.alertHeader}>
+                  <div className={styles.titleGroup}>
+                    <span className={`${styles.statusDot} ${styles[alert.status]}`}></span>
+                    <h3 className={styles.alertTitle}>{alert.title}</h3>
+                  </div>
+                  <span className={styles.alertTime}>{alert.time}</span>
                 </div>
-                <span className={styles.alertTime}>{alert.time}</span>
+                <p className={styles.alertDescription}>{alert.description}</p>
               </div>
-              <p className={styles.alertDescription}>{alert.description}</p>
-            </div>
-          ))}
+            ))}
+          */}
+
+          {userAlerts.length !== 0 ? (
+            <>
+            {userAlerts.map((alert, index) => (
+              <div key={index} className={styles.alertItem}>
+                <div className={styles.alertHeader}>
+                  <div className={styles.titleGroup}>
+                    <span className={`${styles.statusDot} ${styles[alert.status]}`}></span>
+                    <h3 className={styles.alertTitle}>{alert.title}</h3>
+                  </div>
+                  <span className={styles.alertTime}>{alert.createdAt?.toDate ? alert.createdAt.toDate().toLocaleDateString() : ''}</span>
+                </div>
+                <p className={styles.alertDescription}>{alert.description}</p>
+              </div>
+            ))}
+            </>
+          )
+          : 
+          (
+            <>
+              <div>
+                No alerts
+              </div>
+            </>
+          )
+          }
+
         </div>
 
         {/* Right Column: Settings */}
@@ -109,9 +224,9 @@ const Alerts: React.FC = () => {
             <h4 className={styles.warningLevelTitle}>Warning level</h4>
             <div className={styles.warningBarGroup}>
               <div className={styles.progressBarBg}>
-                <div className={styles.progressBarFill} style={{ width: '80%' }}></div>
+                <div className={styles.progressBarFill} style={{ width: `${warningLevel}%` }}></div>
               </div>
-              <span className={styles.warningPercentage}>80%</span>
+              <span className={styles.warningPercentage}>{warningLevel}%</span>
             </div>
             <p className={styles.warningDescription}>
               You are alerted once a category or your monthly budget reaches this level.

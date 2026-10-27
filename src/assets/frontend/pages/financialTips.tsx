@@ -24,7 +24,7 @@ const tipsData = [
   },
   {
     category: 'SAVING',
-    title: 'Keep a R 300 buffer',
+    title: 'Keep a R300 buffer',
     description: 'A small untouched amount covers a printing deadline or a broken charger without breaking the budget.',
   },
   {
