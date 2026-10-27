@@ -64,11 +64,11 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             return;
         }
 
-        const data = snapshot.data() as { firstname?: string, income?: { totalIncome?: number } };
+        const data = snapshot.data() as { firstName?: string, income?: { totalIncome?: number } };
 
         setUserDetails((prev) => ({
             ...prev,
-            firstname: (", " + data.firstname) || "",
+            firstname: (", " + data.firstName) || "",
             totalBalance: data.income?.totalIncome || 0,
         }));
 
@@ -88,7 +88,11 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         const budgetRef = doc(db, "budget_planner", uid);
         const budgetSnapshot = await getDoc(budgetRef);
   
-        const data = budgetSnapshot.data() as BudgetPlanner || [];
+        const data = budgetSnapshot.data() as BudgetPlanner || null;
+
+        if (!data) {
+          return;
+        }
 
         const balanceLeft = (
           data.spentTotals.dataAndAirtime +

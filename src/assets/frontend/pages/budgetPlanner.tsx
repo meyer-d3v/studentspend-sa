@@ -5,14 +5,16 @@ import { getDoc, doc, setDoc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 
+/*
 const categories = [
-  { name: 'Transport', percentage: '15', amount: '900' },
-  { name: 'Food', percentage: '30', amount: '1 800' },
-  { name: 'Rent', percentage: '37', amount: '2 200' },
-  { name: 'Data and airtime', percentage: '7', amount: '400' },
-  { name: 'Groceries', percentage: '8', amount: '500' },
-  { name: 'Other', percentage: '3', amount: '200' },
+  { name: 'Transport', percentage: '15', amount: '0' },
+  { name: 'Food', percentage: '30', amount: '0' },
+  { name: 'Rent', percentage: '37', amount: '0' },
+  { name: 'Data and airtime', percentage: '7', amount: '0' },
+  { name: 'Groceries', percentage: '8', amount: '0' },
+  { name: 'Other', percentage: '3', amount: '0' },
 ];
+*/
 
 const BudgetPlanner: React.FC = () => {
 
@@ -21,12 +23,12 @@ const BudgetPlanner: React.FC = () => {
     monthlyLimit: 0,
     weeklyLimit: 0,
     catagoryAllocations: {
-      transport: 900,
-      food: 1800, 
-      rent: 2200,
-      dataAndAirtime: 400,
-      groceries: 500,
-      other: 200,
+      transport: 0,
+      food: 0, 
+      rent: 0,
+      dataAndAirtime: 0,
+      groceries: 0,
+      other: 0,
     }
   });
 
@@ -46,12 +48,13 @@ const BudgetPlanner: React.FC = () => {
           return false;
       }
 
-      const data = snapshot.data() as { email?: string, income?: { totalIncome?: number, weeklyIncome?: number }  };
+      const data = snapshot.data() as { email?: string, income?: { totalIncome?: number, weeklyIncome?: number }, limit?: { monthlyLimit: number }  };
 
       setUserData((prev) => ({
           ...prev,
           monthlyIncome: data.income?.totalIncome || 0,
-          weeklyIncome: data.income?.weeklyIncome || 0
+          weeklyIncome: data.income?.weeklyIncome || 0,
+          monthlyLimit: data.limit?.monthlyLimit || 0
       }));
 
     } catch (e) {
@@ -211,16 +214,27 @@ const BudgetPlanner: React.FC = () => {
                 monthlyLimit: e.target.valueAsNumber,
                 weeklyLimit: (e.target.valueAsNumber / 4)
               }))}
-              placeholder="6 000" 
+              placeholder="0" 
             />
           </div>
         </div>
 
         {/* Weekly Limit Card */}
-        <div className={styles.card}>
-          <span className={styles.cardLabel}>Weekly limit, calculated</span>
-          <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.weeklyLimit}</div>
-        </div>
+        {activeToggle === "monthly" ? (
+          <>
+            <div className={styles.card}>
+              <span className={styles.cardLabel}>Monthly limit, calculated</span>
+              <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.monthlyIncome}</div>
+            </div>
+          </>
+        )
+        : 
+        (
+          <div className={styles.card}>
+            <span className={styles.cardLabel}>Weekly limit, calculated</span>
+            <div className={`${styles.cardValueLarge} ${styles.textBlue}`}>R {userData.monthlyIncome / 4}</div>
+          </div>
+        )}
 
       </div>
 
@@ -228,10 +242,12 @@ const BudgetPlanner: React.FC = () => {
       <div className={styles.mainPanel}>
         <div className={styles.panelHeader}>
           <h2 className={styles.panelTitle}>Category allocations</h2>
-          <span className={styles.textGreen}>R 0 left to allocate</span>
+          <span className={styles.textGreen}>R 
+            {userData.monthlyLimit} left to allocate</span>
         </div>
 
         <div className={styles.categoryGrid}>
+          {/*}
           {categories.map((cat, index) => (
             <div key={index} className={styles.categoryItem}>
               
@@ -261,6 +277,36 @@ const BudgetPlanner: React.FC = () => {
 
             </div>
           ))}
+            */}
+
+          
+            <div className={styles.categoryItem}>
+              
+              <div className={styles.categoryLeft}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>Transport</span>
+                  <span className={styles.categoryPercent}>{((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2)}% of budget</span>
+                </div>
+                <div className={styles.progressBarBg}>
+                  <div 
+                    className={styles.progressBarFill} 
+                    style={{ width: `${((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2)}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className={styles.categoryRight}>
+                <div className={styles.inputGroupSmall}>
+                  <span className={styles.currencyPrefix}>R</span>
+                  <input 
+                    type="text" 
+                    className={styles.amountInput} 
+                    placeholder={userData.catagoryAllocations.transport.toString()} 
+                  />
+                </div>
+              </div>
+
+            </div>
         </div>
 
         {/* Action Buttons */}

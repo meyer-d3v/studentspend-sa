@@ -16,7 +16,7 @@ const expensesData = [
   { date: '20 Oct', item: 'Airtime top up', category: 'Data', amount: 'R 60.00' },
   { date: '19 Oct', item: 'Bus fare', category: 'Transport', amount: 'R 25.00' },
 ];
-*/
+
 
 const categoryData = [
   { name: 'Food', amount: 'R 0.00', percentage: '0%' },
@@ -24,6 +24,7 @@ const categoryData = [
   { name: 'Data and airtime', amount: 'R 0.00', percentage: '0%' },
   { name: 'Education', amount: 'R 0.00', percentage: '0%' },
 ];
+*/
 
 type Expenses = {
   date: Date,
@@ -67,8 +68,8 @@ const Expenses: React.FC = () => {
       const snapshot = await getDocs(expensesQuery);
 
       if (snapshot.empty) {
-          console.error("Error occured: No database document found");
-          setError("Error occured: No database document found");
+          console.error("No database document found");
+          //setError("Error occured: No database document found");
           return false;
       }
 
@@ -122,6 +123,7 @@ const Expenses: React.FC = () => {
     } catch (e) {
 
       console.log("Error occured: " + e);
+      setError("Error occured: " + e);
 
     } finally {
 
@@ -264,7 +266,9 @@ const Expenses: React.FC = () => {
                 )
                 :
                 (
-                  <>Loading expenses...</>
+                  <tr>
+                    <td>Loading expenses...</td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -323,20 +327,18 @@ const Expenses: React.FC = () => {
               :
               (
                 <>
-                  {categoryData.map((cat, index) => (
-                    <div key={index} className={styles.categoryItem}>
-                      <div className={styles.categoryHeader}>
-                        <span className={styles.categoryName}>{cat.name}</span>
-                        <span className={styles.categoryAmount}>{cat.amount}</span>
-                      </div>
-                      <div className={styles.progressBarBg}>
-                        <div 
-                          className={styles.progressBarFill} 
-                          style={{ width: cat.percentage }}
-                        ></div>
-                      </div>
+                  <div className={styles.categoryItem}>
+                    <div className={styles.categoryHeader}>
+                      <span className={styles.categoryName}>No expenses found</span>
+                      <span className={styles.categoryAmount}></span>
                     </div>
-                  ))}
+                    <div className={styles.progressBarBg}>
+                      <div 
+                        className={styles.progressBarFill} 
+                        style={{ width: "" }}
+                      ></div>
+                    </div>
+                  </div>
                 </>
               )}
             </div>

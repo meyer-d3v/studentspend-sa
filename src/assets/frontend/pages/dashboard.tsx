@@ -85,13 +85,15 @@ const Dashboard: React.FC = () => {
       const budgetRef = doc(db, "budget_planner", uid);
       const budgetSnapshot = await getDoc(budgetRef);
 
-      const data = budgetSnapshot.data() as BudgetPlanner || [];
+      const data = budgetSnapshot.data() as BudgetPlanner || null;
+
+      if (!data) return;
 
 
       setUserBudget([
         { 
           title: 'Food', 
-          amount: data.spentTotals.food, 
+          amount: data.spentTotals?.food, 
           allocated: data.food, 
           spentPercentage: (data.spentTotals.food / data.food) * 100 
         },

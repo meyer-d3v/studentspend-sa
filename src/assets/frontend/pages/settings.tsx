@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import styles from "../styles/Settings.module.css";
 import { getAuth } from 'firebase/auth';
-import { replace, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 
 type User = {
-  firstname: string,
-  lastname: string,
+  firstName: string,
+  lastName: string,
   email: string,
   institution: string,
   yearOfStudy: string,
@@ -113,7 +113,7 @@ const Settings: React.FC = () => {
 
       getAuth().signOut;
       console.log("User logging out");
-      replace("/");
+      navigate("/", { replace: true });
       return;
 
     } catch (e) {
@@ -143,8 +143,8 @@ const Settings: React.FC = () => {
 
       setUserData((prev) => ({
         ...prev,
-        firstname: data.firstname,
-        lastname: data.lastname,
+        firstname: data.firstName,
+        lastname: data.lastName,
         email: data.email,
         institution: data.institution,
         yearOfStudy: data.yearOfStudy,
@@ -187,7 +187,7 @@ const Settings: React.FC = () => {
           {/* Profile Details Card */}
           <div className={styles.card}>
             <div className={styles.profileHeader}>
-              <div className={styles.avatar}>{userData.firstname !== "" ? (userData.firstname?.charAt(0) + userData.lastname?.charAt(0)) : ""}</div>
+              <div className={styles.avatar}>{(userData?.firstname?.charAt(0) || "") + (userData?.lastname?.charAt(0) || "")}</div>
               <div className={styles.profileInfo}>
                 <h2 className={styles.profileName}>{userData.firstname}</h2>
                 {/*<p className={styles.profileStudentNum}>Student number 000000000</p>*/}

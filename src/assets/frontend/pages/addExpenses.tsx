@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import styles from "../styles/AddExpenses.module.css";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { doc, getDoc, serverTimestamp, updateDoc, increment, addDoc, collection } from 'firebase/firestore';
+import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 type Expenses = {
+  id: string,
   date: Date,
   item: string,
   category: string,
@@ -21,7 +22,7 @@ const AddExpensePage: React.FC = () => {
     category: "",
     notes: "",
   });
-  const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);
+  const [userExpenses, setUserExpenses] = useState<Expenses[]>([]);
   const [activeSelection, setActiveSelection] = useState<string>("");
 
   const categories = [
@@ -70,11 +71,18 @@ const AddExpensePage: React.FC = () => {
     try {
 
       const uid = getAuth().currentUser?.uid || "";
-      const ref = doc(db, "expenses", uid);
-      const snapshot = await getDoc(ref);
+      const ref = collection(db, "expenses");
+      const expensesQuery = query(ref,
+        where("userId", "==", uid),
+        orderBy("createdAt", "desc")
+      )
+      const snapshot = await getDocs(expensesQuery);
 
 
-      const data = snapshot?.data() as unknown as Array<Expenses>;
+      const data = snapshot?.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Expenses));
 
       setUserExpenses(data || []);
 
