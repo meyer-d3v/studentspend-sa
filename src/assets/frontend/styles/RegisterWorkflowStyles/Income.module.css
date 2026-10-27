@@ -84,6 +84,7 @@
   overflow: hidden;
   width: 140px;
   height: 42px;
+  text-align: left;
 }
 
 .currencySymbol {
@@ -96,6 +97,18 @@
   align-items: center;
   justify-content: center;
   border-right: 1px solid #d1d5db;
+  user-select: none;
+}
+
+/* 1. Show users it is interactive before they click */
+.inputWrapper:hover {
+  border-color: #9ca3af;
+}
+
+/* 2. Highlight the ENTIRE wrapper when the input is active */
+.inputWrapper:focus-within {
+  border-color: #1a1a1a; /* A clear, active blue */
+  box-shadow: 0 0 0 3px 1a1a1a; /* Soft focus ring */
 }
 
 .amountInput {
@@ -105,12 +118,16 @@
   padding: 0 0.85rem;
   font-size: 0.95rem;
   color: #1a1a1a;
-  text-align: right;
+  text-align: left;
   outline: none;
 }
 
 .amountInput:focus {
   background-color: #fcfcfc;
+}
+
+.amountInput::placeholder {
+  color: #9ca3af;
 }
 
 /* Total Box */
