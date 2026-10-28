@@ -328,7 +328,7 @@ const BudgetPlanner: React.FC = () => {
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ) : 0}%` }}
                   ></div>
                 </div>
               </div>
