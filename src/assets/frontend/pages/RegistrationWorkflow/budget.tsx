@@ -25,12 +25,12 @@ const Budget: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
 
     const categories = [
-        { name: 'Transport', amount: 'R 900', percentage: 35 },
-        { name: 'Food', amount: 'R 1 800', percentage: 75 },
-        { name: 'Rent', amount: 'R 2 200', percentage: 100 },
-        { name: 'Data and airtime', amount: 'R 400', percentage: 15 },
-        { name: 'Groceries', amount: 'R 500', percentage: 20 },
-        { name: 'Other', amount: 'R 200', percentage: 10 },
+        { name: 'Transport', amount: 'R0', percentage: 0 },
+        { name: 'Food', amount: 'R0', percentage: 0 },
+        { name: 'Rent', amount: 'R0', percentage: 0 },
+        { name: 'Data and airtime', amount: 'R0', percentage: 0 },
+        { name: 'Groceries', amount: 'R0', percentage: 0 },
+        { name: 'Other', amount: 'R0', percentage: 0 },
     ];
 
     const updateUserData = async () => {
@@ -113,6 +113,7 @@ const Budget: React.FC = () => {
                 <div className={styles.stepIndicator}>STEP 5 OF 5</div>
                 <h1 className={styles.title}>Set your spending limits</h1>
                 <p className={styles.subtitle}>Keep a little back so the end of the month is not a surprise.</p>
+                <p className={styles.subtitle}>(You can adjust the budget after onboarding)</p>
 
                 <form className={styles.form}>
                 

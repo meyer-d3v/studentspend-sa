@@ -4,6 +4,7 @@ import styles from "../styles/AddExpenses.module.css";
 import { db } from "../../backend/firebaseConfig/config";
 import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { LoaderCircle } from 'lucide-react';
 
 type Expenses = {
   id: string,
@@ -25,10 +26,13 @@ const AddExpensePage: React.FC = () => {
   const [userExpenses, setUserExpenses] = useState<Expenses[]>([]);
   const [activeSelection, setActiveSelection] = useState<string>("");
   const [error, setError] = useState<String | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const saveData = async () => {
 
     try {
+
+      setLoading(true);
 
       const uid = getAuth().currentUser?.uid || "";
       const expensesRef = collection(db, "expenses");
@@ -57,11 +61,38 @@ const AddExpensePage: React.FC = () => {
         [`spentTotals.${(formData.category).toLowerCase()}`]: increment(formData.amount)
       });
 
+      if (formData.amount > 250) {
+
+        const alertsRef = collection(db, "alerts");
+
+        await addDoc(alertsRef, {
+          userId: uid,
+          createdAt: serverTimestamp(),
+          status: 'info',
+          title: 'Large expense recorded',
+          description: `An expense of R${formData.amount}  was added to ${formData.category}, above your R 250 large expense threshold.`
+        });
+
+      }
+
       console.log("Data saved to database");
+      setLoading(false);
+      alert("Data saved to database");
 
     } catch (e) {
 
       console.log("Error occured: " + e);
+
+    } finally {
+
+      setLoading(false);
+      setFormData({
+        date: "",
+        amount: 0,
+        description: "",
+        category: "",
+        notes: "",
+      })
 
     }
 
@@ -309,7 +340,24 @@ const AddExpensePage: React.FC = () => {
             
             <div className={styles.actionButtons}>
               <button type="button" className={styles.cancelBtn}>Cancel</button>
-              <button type="button" className={styles.saveBtn} onClick={() => saveData()}>Save expense</button>
+              <button 
+                type="button" 
+                className={styles.saveBtn} 
+                onClick={() => 
+                  saveData()
+                }
+              >
+                {loading !== true ? (
+                  <>
+                    Save expense
+                  </>
+                )
+                :
+                (
+                  <LoaderCircle size={16} className={styles.loaderCircle} />
+                )
+                }
+              </button>
             </div>
           </div>
         </div>

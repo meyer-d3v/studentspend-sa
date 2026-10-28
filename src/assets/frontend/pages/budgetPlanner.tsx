@@ -4,6 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { getDoc, doc, setDoc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
+import { LoaderCircle } from 'lucide-react';
 
 /*
 const categories = [
@@ -33,6 +34,8 @@ const BudgetPlanner: React.FC = () => {
   });
 
   const [activeToggle, setActiveToggle] = useState<String>("weekly");
+  const [loading, setLoading] = useState<boolean>(false);
+
 
   const getUserInformation = async () => {
 
@@ -112,6 +115,8 @@ const BudgetPlanner: React.FC = () => {
 
     try {
 
+      setLoading(true);
+
       const uid = getAuth().currentUser?.uid || "";
       const ref = doc(db, "budget_planner", uid);
       await setDoc(ref, {
@@ -125,13 +130,18 @@ const BudgetPlanner: React.FC = () => {
         
       });
 
+      setLoading(false);
+
 
     } catch (e) {
+
+      alert("Error occured. Error: " + e);
 
 
     } finally {
 
       console.log("Data saved successfully");
+      setLoading(false);
       
     }
 
@@ -540,7 +550,23 @@ const BudgetPlanner: React.FC = () => {
 
         {/* Action Buttons */}
         <div className={styles.actionButtons}>
-          <button className={styles.primaryBtn} onClick={() => saveBudget()}>Save budget</button>
+          <button 
+            className={styles.primaryBtn} 
+            onClick={() => 
+              saveBudget()
+            }
+          >
+            {loading !== true ? (
+              <>
+                Save budget
+              </>
+            )
+            :
+            (
+              <LoaderCircle size={16} className={styles.loaderCircle} />
+            )
+            }
+          </button>
           <button className={styles.secondaryBtn} onClick={() => resetBudget()}>Reset to last saved</button>
         </div>
       </div>

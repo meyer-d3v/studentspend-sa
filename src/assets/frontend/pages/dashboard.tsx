@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
     { title: 'Data and airtime', amount: '199', allocated: '400', spentPercentage: (199 / 400) * 100 },
     { title: 'Groceries', amount: '190', allocated: '500', spentPercentage: (190 / 500) * 100 },
   ];
-  */
+  
 
   // Expenses Data
   const expenses = [
@@ -57,6 +57,8 @@ const Dashboard: React.FC = () => {
     { date: '24 Oct', item: 'Data bundle 2GB', category: 'Data', amount: '99.00' },
     { date: '23 Oct', item: 'Lunch, campus cafe', category: 'Food', amount: '48.00' },
   ];
+
+  */
 
   const emptyBudgetCardsData = [
     { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
@@ -211,7 +213,7 @@ const Dashboard: React.FC = () => {
               {userBudget.map((data, index) => (
                 <div key={index} className={styles.budgetCard}>
                   <div className={styles.cardHeader}>{data.title}</div>
-                  <div className={styles.cardAmount}>R {data.amount}</div>
+                  <div className={styles.cardAmount}>R {data.amount !== undefined ? data.amount : "0"}</div>
                   <div className={styles.progressBar}>
                     <div
                       className={styles.progressFill}
@@ -250,6 +252,7 @@ const Dashboard: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
+                    {/*
                     {expenses.map((expense, index) => (
                       <tr key={index} className={styles.tableDataRow}>
                         <td>{expense.date}</td>
@@ -258,10 +261,17 @@ const Dashboard: React.FC = () => {
                         <td className={styles.itemAmount}>R {expense.amount}</td>
                       </tr>
                     ))}
+                    */}
 
-                    {userExpenses.map((expense) => (
+                    {userExpenses.map((expense: any) => (
                       <tr key={expense.id} className={styles.tableDataRow}>
-                        <td>{expense.date.toDateString()}</td>
+                        <td>
+                          {
+                            expense.date?.toDate 
+                              ? expense.date.toDate().toDateString() 
+                              : new Date(expense.date).toDateString()
+                          }
+                        </td>
                         <td className={styles.itemName}>{expense.item}</td>
                         <td className={styles.itemCategory}>{expense.category}</td>
                         <td className={styles.itemAmount}>R {expense.amount}</td>

@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from "../styles/Reports.module.css";
+import { doc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+// @ts-ignore
+import { db } from "../../backend/firebaseConfig/config";
 
 const chartData = [
   { week: 'Week 1', amount: 'R 1 180', height: '78%', type: 'normal' },
-  { week: 'Week 2', amount: 'R 1 420', height: '94%', type: 'normal' },
-  { week: 'Week 3', amount: 'R 1 500', height: '100%', type: 'warning' },
-  { week: 'Week 4', amount: 'R 900', height: '60%', type: 'normal' },
+  { week: 'Week 2', amount: 'R 0', height: '0%', type: 'normal' },
+  { week: 'Week 3', amount: 'R 0', height: '0%', type: 'normal' },
+  { week: 'Week 4', amount: 'R 0', height: '0%', type: 'normal' },
 ];
 
 const categoryData = [
@@ -17,6 +21,51 @@ const categoryData = [
 ];
 
 const Reports: React.FC = () => {
+
+  /*
+  const [userData, setuserData] = useState({
+    totalIncome: 0,
+    totalSpend: 0,
+    netBalance: 0,
+  });
+  */
+
+  const getUserData = async () => {
+
+    try {
+
+      const uid = getAuth().currentUser?.uid;
+      if (!uid) return;
+      const ref = doc(db, "budget_planner", uid);
+
+      const snapshot = await getDoc(ref);
+
+      const data = snapshot.data();
+
+      console.log(data);
+
+
+
+    } catch (e) {
+
+      console.log("Error occured. Error: " + e);
+
+    }
+
+  }
+
+  useEffect(() => {
+
+    try {
+
+      getUserData();
+
+    } catch (e) {
+
+      console.log("Error occured trying to get user data. Error: " + e);
+
+    }
+  })
 
   return (
     <div className={styles.container}>
