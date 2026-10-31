@@ -63,7 +63,64 @@
 .alertItem:last-child {
   border-bottom: none;
   /* Add padding to the bottom to match the empty space in the screenshot */
-  padding-bottom: 12rem; 
+  padding-bottom: 12rem;
+}
+
+/* Empty State - No Alerts */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #888;
+}
+
+.emptyStateIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: #aaa;
+}
+
+.emptyStateTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyStateDescription {
+  font-size: 0.95rem;
+  color: #888;
+  margin: 0 0 1.5rem 0;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.emptyStateAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background-color: #1f4363;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.emptyStateAction:hover {
+  background-color: #16324e;
 }
 
 .alertHeader {

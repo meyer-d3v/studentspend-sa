@@ -9,7 +9,7 @@ import { LoaderCircle } from 'lucide-react';
 type Expenses = {
   id: string,
   date: Date,
-  item: string,
+  description: string,
   category: string,
   amount: number
 }
@@ -392,7 +392,7 @@ const AddExpensePage: React.FC = () => {
               {userExpenses.length !== 0 ? (
                 userExpenses.map((expense, index) => (
                   <li key={index} className={styles.recentItem}>
-                    <span className={styles.recentDesc}>{expense.item}</span>
+                    <span className={styles.recentDesc}>{expense.description}</span>
                     <span className={styles.recentAmount}>R {expense.amount}</span>
                   </li>
                 ))

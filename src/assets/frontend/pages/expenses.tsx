@@ -83,35 +83,43 @@ const Expenses: React.FC = () => {
 
       let total = 0;
       let categoryData = [
-        { name: 'Food', amount: 0, percentage: 0 },
-        { name: 'Transport', amount: 0, percentage: 0 },
-        { name: 'Data and airtime', amount: 0, percentage: 0 },
-        { name: 'Groceries', amount: 0, percentage: 0 },
-        { name: 'Other', amount: 0, percentage: 0 },
+        { name: 'Food', amount: "0", percentage: "0%" },
+        { name: 'Transport', amount: "0", percentage: "0%" },
+        { name: 'Data and airtime', amount: "0", percentage: "0%" },
+        { name: 'Groceries', amount: "0", percentage: "0%" },
+        { name: 'Other', amount: "0", percentage: "0%" },
       ];
 
       userExpenses.forEach((e: any) => {
 
         total = total + e.amount;
-        
+
+        // Normalize category name from database to match our display names
+        let normalizedCategory = e.category;
+        if (e.category.toLowerCase() === "data" || e.category.toLowerCase() === "dataandairtime" || e.category.toLowerCase() === "data and airtime") {
+          normalizedCategory = "Data and airtime";
+        } else if (e.category.toLowerCase() === "education") {
+          normalizedCategory = "Other"; // Map education to Other since we don't have Education category
+        }
+
         let categoryIndex = categoryData.findIndex(
-          (c) => c.name.toLowerCase() === e.category.toLowerCase()
+          (c) => c.name.toLowerCase() === normalizedCategory.toLowerCase()
         );
-    
+
         if (categoryIndex !== -1) {
 
-          let newAmount = categoryData[categoryIndex].amount + e.amount;
-          categoryData[categoryIndex].amount = newAmount.toFixed(2);
-
-        } else if (e.category === "dataAndAirtime") {
-
-          let targetCategory = categoryData.findIndex(c => c.name.toLowerCase() === "data and airtime") || -1;
-
-          let newAmount = categoryData[targetCategory].amount + e.amount;
+          let currentAmount = parseFloat(categoryData[categoryIndex].amount);
+          let newAmount = currentAmount + e.amount;
           categoryData[categoryIndex].amount = newAmount.toFixed(2);
 
         }
 
+      });
+
+      // Calculate percentages after all amounts are aggregated
+      categoryData.forEach((cat) => {
+        let catAmount = parseFloat(cat.amount);
+        cat.percentage = total > 0 ? ((catAmount / total) * 100).toFixed(2) + "%" : "0%";
       });
 
       setCategoryExpensesData(categoryData as any);

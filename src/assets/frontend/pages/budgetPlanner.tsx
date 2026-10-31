@@ -323,12 +323,12 @@ const BudgetPlanner: React.FC = () => {
               <div className={styles.categoryLeft}>
                 <div className={styles.categoryHeader}>
                   <span className={styles.categoryName}>Transport</span>
-                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                  <span className={styles.categoryPercent}>{userData.monthlyLimit > 0 && userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.monthlyLimit > 0 && userData.catagoryAllocations.transport !== 0 ? ((userData.catagoryAllocations.transport / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -368,12 +368,12 @@ const BudgetPlanner: React.FC = () => {
               <div className={styles.categoryLeft}>
                 <div className={styles.categoryHeader}>
                   <span className={styles.categoryName}>Food</span>
-                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                  <span className={styles.categoryPercent}>{userData.monthlyLimit > 0 && userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.monthlyLimit > 0 && userData.catagoryAllocations.food !== 0 ? ((userData.catagoryAllocations.food / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -413,12 +413,12 @@ const BudgetPlanner: React.FC = () => {
               <div className={styles.categoryLeft}>
                 <div className={styles.categoryHeader}>
                   <span className={styles.categoryName}>Data and Airtime</span>
-                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                  <span className={styles.categoryPercent}>{userData.monthlyLimit > 0 && userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.monthlyLimit > 0 && userData.catagoryAllocations.dataAndAirtime !== 0 ? ((userData.catagoryAllocations.dataAndAirtime / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -458,12 +458,12 @@ const BudgetPlanner: React.FC = () => {
               <div className={styles.categoryLeft}>
                 <div className={styles.categoryHeader}>
                   <span className={styles.categoryName}>Groceries</span>
-                  <span className={styles.categoryPercent}>{userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
+                  <span className={styles.categoryPercent}>{userData.monthlyLimit > 0 && userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}% of budget</span>
                 </div>
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.monthlyLimit > 0 && userData.catagoryAllocations.groceries !== 0 ? ((userData.catagoryAllocations.groceries / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -510,7 +510,7 @@ const BudgetPlanner: React.FC = () => {
                 <div className={styles.progressBarBg}>
                   <div 
                     className={styles.progressBarFill} 
-                    style={{ width: `${userData.catagoryAllocations.other !== 0 ? ((userData.catagoryAllocations.other / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
+                    style={{ width: `${userData.monthlyLimit > 0 && userData.catagoryAllocations.other !== 0 ? ((userData.catagoryAllocations.other / userData.monthlyLimit) * 100 ).toFixed(2) : 0}%` }}
                   ></div>
                 </div>
               </div>

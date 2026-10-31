@@ -194,6 +194,70 @@
   font-weight: 400;
 }
 
+/* Weekly Spending Chart */
+.weeklyChart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 180px;
+  padding: 10px 0;
+  gap: 8px;
+}
+
+.weekBarGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.weekBarAmount {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.weekBar {
+  width: 100%;
+  max-width: 50px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.3s ease;
+}
+
+.weekBarBlue {
+  background-color: #1f4363;
+}
+
+.weekBarAmber {
+  background-color: #b37e3d;
+}
+
+.weekBarLabel {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 8px;
+}
+
+.chartFooter {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.chartLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: #888;
+  font-size: 0.85rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .mainContentGrid {

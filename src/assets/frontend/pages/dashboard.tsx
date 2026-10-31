@@ -8,7 +8,7 @@ import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from '
 
 type Expenses = {
   id: string,
-  date: Date,
+  date: any, // Firestore Timestamp
   item: string,
   category: string,
   amount: number
@@ -23,20 +23,28 @@ type BudgetCards = {
 
 type BudgetPlanner = {
   transport: number,
-  food: number, 
+  food: number,
   rent: number,
   dataAndAirtime: number,
   groceries: number,
   other: number,
   spentTotals: {
     transport: number,
-    food: number, 
+    food: number,
     rent: number,
     dataAndAirtime: number,
     groceries: number,
     other: number,
   }
 }
+
+type WeeklySpending = {
+  week: string;
+  amount: number;
+  isOverLimit: boolean;
+};
+
+const WEEK_LABELS = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
 
 const Dashboard: React.FC = () => {
 
@@ -70,6 +78,8 @@ const Dashboard: React.FC = () => {
 
   const [userExpenses, setUserExpenses] = useState<Array<Expenses>>([]);
   const [userBudget, setUserBudget] = useState<Array<BudgetCards>>([]);
+  const [weeklySpending, setWeeklySpending] = useState<WeeklySpending[]>([]);
+  const [weeklyLimit, setWeeklyLimit] = useState(0);
   const [loading, setLoading] = useState<Boolean>(false);
 
   const navigate = useNavigate();
@@ -166,6 +176,68 @@ const Dashboard: React.FC = () => {
 
   }
 
+  const getWeeklySpending = async () => {
+    try {
+      const uid = getAuth().currentUser?.uid;
+      if (!uid) return;
+
+      // Get user's monthly limit to calculate weekly limit
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+      const monthlyLimit = userData?.limit?.monthlyLimit || 0;
+      const calculatedWeeklyLimit = monthlyLimit > 0 ? monthlyLimit / 4 : 0;
+      setWeeklyLimit(calculatedWeeklyLimit);
+
+      // Fetch all expenses for this user
+      const expensesRef = collection(db, "expenses");
+      const expensesQuery = query(expensesRef, where("userId", "==", uid));
+      const expensesSnap = await getDocs(expensesQuery);
+
+      const expenses: Expenses[] = expensesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Expenses[];
+
+      // Calculate date range for current month
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Filter expenses for current month
+      const currentMonthExpenses = expenses.filter(e => {
+        const expenseDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+        return expenseDate >= monthStart && expenseDate <= monthEnd;
+      });
+
+      // Calculate weekly spending (4 weeks of current month)
+      const weeklyData: WeeklySpending[] = WEEK_LABELS.map((weekLabel, index) => {
+        const weekStart = new Date(monthStart);
+        weekStart.setDate(monthStart.getDate() + index * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        const weekExpenses = currentMonthExpenses.filter(e => {
+          const expenseDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+          return expenseDate >= weekStart && expenseDate <= weekEnd;
+        });
+
+        const weekTotal = weekExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+        return {
+          week: weekLabel,
+          amount: weekTotal,
+          isOverLimit: calculatedWeeklyLimit > 0 && weekTotal > calculatedWeeklyLimit
+        };
+      });
+
+      setWeeklySpending(weeklyData);
+
+    } catch (e) {
+      console.log("Error fetching weekly spending: " + e);
+    }
+  };
+
 
   useEffect(() => {
 
@@ -173,6 +245,7 @@ const Dashboard: React.FC = () => {
 
       getUserBudget();
       getRecentExpenses();
+      getWeeklySpending();
 
     } catch (e) {
 
@@ -246,7 +319,7 @@ const Dashboard: React.FC = () => {
                   <thead>
                     <tr className={styles.tableHeaderRow}>
                       <th>DATE</th>
-                      <th>ITEM</th>
+                      <th>DESCRIPTION</th>
                       <th>CATEGORY</th>
                       <th className={styles.amountHeader}>AMOUNT</th>
                     </tr>
@@ -272,7 +345,7 @@ const Dashboard: React.FC = () => {
                               : new Date(expense.date).toDateString()
                           }
                         </td>
-                        <td className={styles.itemName}>{expense.item}</td>
+                        <td className={styles.itemName}>{expense.description}</td>
                         <td className={styles.itemCategory}>{expense.category}</td>
                         <td className={styles.itemAmount}>R {expense.amount}</td>
                       </tr>
@@ -291,25 +364,49 @@ const Dashboard: React.FC = () => {
   
           {/* Right Column: Chart & Tip of the Day */}
           <div className={styles.rightColumn}>
-            
+
             <div className={styles.chartCard}>
-              <div className={styles.cardTitle}>This week</div>
-              <div className={styles.chartPlaceholder}>
-                <div className={styles.chartStripesPattern}>
-                  <div className={styles.chartPlaceholderText}>
-                    <p>weekly spending chart</p>
-                  </div>
-                </div>
+              <div className={styles.cardTitle}>Weekly spending</div>
+              <div className={styles.weeklyChart}>
+                {weeklySpending.length > 0 ? (
+                  <>
+                    {weeklySpending.map((week, index) => {
+                      const maxAmount = Math.max(...weeklySpending.map(w => w.amount), weeklyLimit || 1);
+                      const heightPercent = maxAmount > 0 ? (week.amount / maxAmount) * 100 : 0;
+                      return (
+                        <div key={index} className={styles.weekBarGroup}>
+                          <span className={styles.weekBarAmount}>
+                            {week.amount > 0 ? `R ${week.amount.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0})}` : 'R 0'}
+                          </span>
+                          <div
+                            className={`${styles.weekBar} ${week.isOverLimit ? styles.weekBarAmber : styles.weekBarBlue}`}
+                            style={{ height: `${Math.max(heightPercent, 5)}%` }}
+                            title={`${week.week}: R ${week.amount.toLocaleString('en-ZA')}${week.isOverLimit ? ' (over limit)' : ''}`}
+                          ></div>
+                          <span className={styles.weekBarLabel}>{week.week}</span>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <div className={styles.chartLoading}>Loading chart...</div>
+                )}
               </div>
+
+              {weeklyLimit > 0 && (
+                <div className={styles.chartFooter}>
+                  Amber marks weeks exceeding the R {weeklyLimit.toLocaleString('en-ZA', {minimumFractionDigits: 0})} weekly limit
+                </div>
+              )}
             </div>
-  
+
             <div className={styles.tipCard}>
               <div className={styles.tipTitle}>TIP OF THE DAY</div>
               <div className={styles.tipContent}>
                 Track the small buys. Airtime and data add up faster than rent.
               </div>
             </div>
-            
+
           </div>
         </div>
         
