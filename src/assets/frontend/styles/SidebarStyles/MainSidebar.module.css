@@ -112,3 +112,8 @@
   color: #2b577a; /* Brand blue */
   font-weight: 600;
 }
+
+
+.progressBarOver {
+  background-color: #c0392b; /* Red when monthly expenses exceed total income */
+}

@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "../styles/SidebarStyles/MainSidebar.module.css";
-import { getDoc, doc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { getAuth } from "firebase/auth";
@@ -12,296 +11,226 @@ interface SidebarProps {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-type BudgetPlanner = {
-  transport: number,
-  food: number,
-  rent: number,
-  dataAndAirtime: number,
-  groceries: number,
-  other: number,
-  spentTotals: {
-    transport: number,
-    food: number,
-    rent: number,
-    dataAndAirtime: number,
-    groceries: number,
-    other: number,
-  }
-}
-
-
 const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<string>("dashboard");
-    const [userDetails, setUserDetails] = useState({
-      firstname: "",
-      balanceLeft: 0,
-      totalBalance: 0,
-      monthlyLimit: 0,
-      totalSpent: 0,
-      spentPercentage: 0,
-    });
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [userDetails, setUserDetails] = useState({
+    firstname: "",
+    balanceLeft: 0,
+    totalIncome: 0,
+    totalSpent: 0,
+    spentPercentage: 0,
+  });
 
-    const navigateToPage = (path: string) => {
+  const navigateToPage = (path: string) => {
+    setActiveTab(path);
+    navigate("/" + path);
+  };
 
-      navigate("/" + path);
+  // Sync active tab with current URL route
+  useEffect(() => {
+    const current = location.pathname.replace(/^\//, "").split("/")[0] || "dashboard";
+    setActiveTab(current);
+  }, [location.pathname]);
 
-    }; 
-
-    const getUserDetails = async () => {
-
-      try {
-
-        const uid = getAuth().currentUser?.uid || "";
-
-        if (!uid) {
-          console.log("No user is logged in");
-          return;
-        }
-        const ref = doc(db, "users", uid);
-        const snapshot = await getDoc(ref);
-
-        if (!snapshot.exists()) {
-            console.error("Error occured: No database document found");
-            return;
-        }
-
-        const data = snapshot.data() as { firstName?: string, income?: { totalIncome?: number }, limit?: { monthlyLimit?: number } };
-
-        setUserDetails((prev) => ({
-            ...prev,
-            firstname: (", " + data.firstName) || "",
-            totalBalance: data.income?.totalIncome || 0,
-            monthlyLimit: data.limit?.monthlyLimit || 0,
-        }));
-
-      } catch (e) {
-
-        console.log("Error occured: " + e);
-
+  const fetchUserFinancials = async () => {
+    try {
+      const uid = getAuth().currentUser?.uid || "";
+      if (!uid) {
+        console.log("No user is logged in");
+        return;
       }
 
+      // 1. Fetch user document to get profile and total income
+      const userRef = doc(db, "users", uid);
+      const userSnapshot = await getDoc(userRef);
+
+      if (!userSnapshot.exists()) {
+        console.error("No user database document found");
+        return;
+      }
+
+      const userData = userSnapshot.data() as {
+        firstName?: string;
+        income?: {
+          totalIncome?: number;
+          nsfasAllowance?: number;
+          partTimeWork?: number;
+          familySupport?: number;
+        };
+      };
+
+      const incomeObj = userData.income;
+      const totalIncome =
+        incomeObj?.totalIncome ??
+        ((incomeObj?.nsfasAllowance || 0) +
+          (incomeObj?.partTimeWork || 0) +
+          (incomeObj?.familySupport || 0));
+
+      const firstName = userData.firstName?.trim() || "";
+
+      // 2. Fetch all expenses for this user to calculate current month total
+      const expensesRef = collection(db, "expenses");
+      const expensesQuery = query(expensesRef, where("userId", "==", uid));
+      const expensesSnapshot = await getDocs(expensesQuery);
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      let currentMonthSpent = 0;
+
+      expensesSnapshot.docs.forEach((docSnap) => {
+        const exp = docSnap.data();
+        const rawDate = exp.date;
+        let expenseDate: Date;
+
+        if (rawDate?.toDate && typeof rawDate.toDate === "function") {
+          expenseDate = rawDate.toDate();
+        } else if (rawDate) {
+          expenseDate = new Date(rawDate);
+        } else {
+          expenseDate = new Date();
+        }
+
+        if (
+          !isNaN(expenseDate.getTime()) &&
+          expenseDate.getFullYear() === currentYear &&
+          expenseDate.getMonth() === currentMonth
+        ) {
+          currentMonthSpent += Number(exp.amount) || 0;
+        }
+      });
+
+      // 3. Calculate balance left and spent percentage
+      const balanceLeft = totalIncome - currentMonthSpent;
+      const spentPercentage = totalIncome > 0 ? (currentMonthSpent / totalIncome) * 100 : 0;
+
+      setUserDetails({
+        firstname: firstName,
+        totalIncome: totalIncome,
+        totalSpent: currentMonthSpent,
+        balanceLeft: balanceLeft,
+        spentPercentage: spentPercentage,
+      });
+
+    } catch (e) {
+      console.log("Error occurred fetching user balance. Error: " + e);
     }
+  };
 
-    const getUserBalance = async () => {
+  // Re-fetch on mount and whenever the user navigates (e.g. after adding an expense)
+  useEffect(() => {
+    fetchUserFinancials();
+  }, [location.pathname]);
 
-      try {
+  return (
+    <div className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
+      <div className={styles.headerSection}>
+        <p className={styles.greeting}>
+          Welcome{userDetails.firstname ? `, ${userDetails.firstname}` : ""}
+        </p>
 
-        const uid = getAuth().currentUser?.uid || "";
-        if (!uid) return;
+        <div className={styles.balanceSection}>
+          <p className={styles.balanceLabel}>BALANCE LEFT</p>
+          <h2 className={styles.balanceAmount}>
+            {userDetails.balanceLeft < 0 ? (
+              <span style={{ color: "#c0392b" }}>
+                -R {Math.abs(userDetails.balanceLeft).toLocaleString("en-ZA", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            ) : (
+              `R ${userDetails.balanceLeft.toLocaleString("en-ZA", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`
+            )}
+          </h2>
 
-        // Fetch budget planner data
-        const budgetRef = doc(db, "budget_planner", uid);
-        const budgetSnapshot = await getDoc(budgetRef);
-        const budgetData = budgetSnapshot.data() as BudgetPlanner || null;
-
-        if (!budgetData) {
-          return;
-        }
-
-        // Calculate total spent from spentTotals
-        const totalSpent = (
-          (budgetData.spentTotals?.dataAndAirtime || 0) +
-          (budgetData.spentTotals?.food || 0) +
-          (budgetData.spentTotals?.groceries || 0) +
-          (budgetData.spentTotals?.other || 0) +
-          (budgetData.spentTotals?.rent || 0) +
-          (budgetData.spentTotals?.transport || 0)
-        );
-
-        // Fetch monthly limit from users document (source of truth)
-        const userRef = doc(db, "users", uid);
-        const userSnapshot = await getDoc(userRef);
-        const userData = userSnapshot.data() as { limit?: { monthlyLimit?: number } } || {};
-        const monthlyLimit = userData.limit?.monthlyLimit || 0;
-
-        // Calculate balance left and percentage with safeguards
-        const balanceLeft = monthlyLimit > 0 ? monthlyLimit - totalSpent : 0;
-        const spentPercentage = monthlyLimit > 0 ? Math.min((totalSpent / monthlyLimit) * 100, 100) : 0;
-
-        setUserDetails((prev) => ({
-          ...prev,
-          balanceLeft: balanceLeft,
-          totalSpent: totalSpent,
-          spentPercentage: spentPercentage,
-          monthlyLimit: monthlyLimit, // Keep monthlyLimit in sync
-        }))
-
-      } catch (e) {
-
-        console.log("Error occured getting balance. Error: " + e);
-      }
-    }
-
-    useEffect(() => {
-
-      try {
-
-        getUserDetails();
-        getUserBalance();
-
-
-      } catch (e) {
-
-        console.log("Error occured: " + e);
-
-      }
-
-    }, []);
-  
-
-
-
-    return (
-
-        <div className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
-
-        <div className={styles.headerSection}>
-          <p className={styles.greeting}>Welcome {userDetails.firstname}</p>
-
-          <div className={styles.balanceSection}>
-            <p className={styles.balanceLabel}>BALANCE LEFT</p>
-            <h2 className={styles.balanceAmount}>
-              R {userDetails.balanceLeft?.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-            </h2>
-
-            <div className={styles.progressBarContainer}>
-              <div
-                className={styles.progressBarFill}
-                style={{
-                  width: `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(2)}%`
-                }}></div>
-            </div>
-
-            <p className={styles.progressText}>
-              {userDetails.monthlyLimit > 0
-                ? `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(1)}% of your monthly limit used`
-                : 'Set a monthly limit in Budget Planner to track usage'}
-            </p>
+          <div className={styles.progressBarContainer}>
+            <div
+              className={`${styles.progressBarFill} ${
+                userDetails.spentPercentage > 100 ? styles.progressBarOver : ""
+              }`}
+              style={{
+                width: `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(2)}%`,
+              }}
+            ></div>
           </div>
+
+          <p className={styles.progressText}>
+            {userDetails.totalIncome > 0
+              ? `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(1)}% of your monthly income used`
+              : "Set your income in Account to track usage"}
+          </p>
         </div>
-
-        <nav className={styles.navigation}>
-          <ul className={styles.navList}>
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "dashboard" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("dashboard")
-                navigateToPage("dashboard")
-              }}
-            >
-              Dashboard
-            </li>
-
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "addExpenses" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("addExpenses")
-                navigateToPage("addExpenses")
-              }}
-            >
-              Add expense
-            </li>
-
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "expenses" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("expenses")
-                navigateToPage("expenses")
-              }}
-            >
-              Expenses
-            </li>
-
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "budgetPlanner" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("budgetPlanner")
-                navigateToPage("budgetPlanner")
-              }}
-            >
-              Budget planner
-            </li>
-            
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "financialTips" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("financialTips")
-                navigateToPage("financialTips")
-              }}
-            >
-              Financial tips
-            </li>
-            
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "alerts" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("alerts")
-                navigateToPage("alerts")
-              }}
-            >
-              Alerts
-            </li>
-
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "reports" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("reports")
-                navigateToPage("reports")
-              }}
-            >
-              Reports
-            </li>
-            <li 
-              className={`
-                ${styles.navItem} 
-                ${activeTab === "settings" && styles.active}
-              `} 
-              
-              onClick={() => {
-                setActiveTab("settings")
-                navigateToPage("settings")
-              }}
-            >
-              Account
-            </li>
-          </ul>
-        </nav>
-
-
-    
       </div>
-    )
-    
-}
+
+      <nav className={styles.navigation}>
+        <ul className={styles.navList}>
+          <li
+            className={`${styles.navItem} ${activeTab === "dashboard" ? styles.active : ""}`}
+            onClick={() => navigateToPage("dashboard")}
+          >
+            Dashboard
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "addExpenses" ? styles.active : ""}`}
+            onClick={() => navigateToPage("addExpenses")}
+          >
+            Add expense
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "expenses" ? styles.active : ""}`}
+            onClick={() => navigateToPage("expenses")}
+          >
+            Expenses
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "budgetPlanner" ? styles.active : ""}`}
+            onClick={() => navigateToPage("budgetPlanner")}
+          >
+            Budget planner
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "financialTips" ? styles.active : ""}`}
+            onClick={() => navigateToPage("financialTips")}
+          >
+            Financial tips
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "alerts" ? styles.active : ""}`}
+            onClick={() => navigateToPage("alerts")}
+          >
+            Alerts
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "reports" ? styles.active : ""}`}
+            onClick={() => navigateToPage("reports")}
+          >
+            Reports
+          </li>
+
+          <li
+            className={`${styles.navItem} ${activeTab === "settings" ? styles.active : ""}`}
+            onClick={() => navigateToPage("settings")}
+          >
+            Account
+          </li>
+        </ul>
+      </nav>
+    </div>
+  );
+};
 
 export default MainSidebar;
