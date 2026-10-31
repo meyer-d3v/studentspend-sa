@@ -55,8 +55,7 @@ const BudgetPlanner: React.FC = () => {
         incomeObj?.totalIncome ??
         ((incomeObj?.nsfasAllowance || 0) +
           (incomeObj?.partTimeWork || 0) +
-          (incomeObj?.familySupport || 0)) ??
-        0;
+          (incomeObj?.familySupport || 0));
 
       let monthlyLimit =
         userDoc?.limit?.monthlyLimit ||
