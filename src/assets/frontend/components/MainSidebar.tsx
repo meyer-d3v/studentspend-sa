@@ -14,14 +14,14 @@ interface SidebarProps {
 
 type BudgetPlanner = {
   transport: number,
-  food: number, 
+  food: number,
   rent: number,
   dataAndAirtime: number,
   groceries: number,
   other: number,
   spentTotals: {
     transport: number,
-    food: number, 
+    food: number,
     rent: number,
     dataAndAirtime: number,
     groceries: number,
@@ -38,6 +38,9 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       firstname: "",
       balanceLeft: 0,
       totalBalance: 0,
+      monthlyLimit: 0,
+      totalSpent: 0,
+      spentPercentage: 0,
     });
 
     const navigateToPage = (path: string) => {
@@ -64,12 +67,13 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             return;
         }
 
-        const data = snapshot.data() as { firstName?: string, income?: { totalIncome?: number } };
+        const data = snapshot.data() as { firstName?: string, income?: { totalIncome?: number }, limit?: { monthlyLimit?: number } };
 
         setUserDetails((prev) => ({
             ...prev,
             firstname: (", " + data.firstName) || "",
             totalBalance: data.income?.totalIncome || 0,
+            monthlyLimit: data.limit?.monthlyLimit || 0,
         }));
 
       } catch (e) {
@@ -85,29 +89,44 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       try {
 
         const uid = getAuth().currentUser?.uid || "";
+        if (!uid) return;
+
+        // Fetch budget planner data
         const budgetRef = doc(db, "budget_planner", uid);
         const budgetSnapshot = await getDoc(budgetRef);
-  
-        const data = budgetSnapshot.data() as BudgetPlanner || null;
+        const budgetData = budgetSnapshot.data() as BudgetPlanner || null;
 
-        if (!data) {
+        if (!budgetData) {
           return;
         }
 
-        const balanceLeft = (
-          data.spentTotals.dataAndAirtime +
-          data.spentTotals.food +
-          data.spentTotals.groceries +
-          data.spentTotals.other +
-          data.spentTotals.rent +
-          data.spentTotals.transport
+        // Calculate total spent from spentTotals
+        const totalSpent = (
+          (budgetData.spentTotals?.dataAndAirtime || 0) +
+          (budgetData.spentTotals?.food || 0) +
+          (budgetData.spentTotals?.groceries || 0) +
+          (budgetData.spentTotals?.other || 0) +
+          (budgetData.spentTotals?.rent || 0) +
+          (budgetData.spentTotals?.transport || 0)
         );
+
+        // Fetch monthly limit from users document (source of truth)
+        const userRef = doc(db, "users", uid);
+        const userSnapshot = await getDoc(userRef);
+        const userData = userSnapshot.data() as { limit?: { monthlyLimit?: number } } || {};
+        const monthlyLimit = userData.limit?.monthlyLimit || 0;
+
+        // Calculate balance left and percentage with safeguards
+        const balanceLeft = monthlyLimit > 0 ? monthlyLimit - totalSpent : 0;
+        const spentPercentage = monthlyLimit > 0 ? Math.min((totalSpent / monthlyLimit) * 100, 100) : 0;
 
         setUserDetails((prev) => ({
           ...prev,
           balanceLeft: balanceLeft,
+          totalSpent: totalSpent,
+          spentPercentage: spentPercentage,
+          monthlyLimit: monthlyLimit, // Keep monthlyLimit in sync
         }))
-
 
       } catch (e) {
 
@@ -137,19 +156,29 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     return (
 
         <div className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
-        
+
         <div className={styles.headerSection}>
           <p className={styles.greeting}>Welcome {userDetails.firstname}</p>
-          
+
           <div className={styles.balanceSection}>
             <p className={styles.balanceLabel}>BALANCE LEFT</p>
-            <h2 className={styles.balanceAmount}>R 0</h2>
-            
+            <h2 className={styles.balanceAmount}>
+              R {userDetails.balanceLeft?.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+            </h2>
+
             <div className={styles.progressBarContainer}>
-              <div className={styles.progressBarFill} style={{ width: `${((userDetails.balanceLeft / userDetails.totalBalance) * 100).toFixed(2)}%` }}></div>
+              <div
+                className={styles.progressBarFill}
+                style={{
+                  width: `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(2)}%`
+                }}></div>
             </div>
-            
-            <p className={styles.progressText}>0% of your monthly limit used</p>
+
+            <p className={styles.progressText}>
+              {userDetails.monthlyLimit > 0
+                ? `${Math.min(Math.max(userDetails.spentPercentage || 0, 0), 100).toFixed(1)}% of your monthly limit used`
+                : 'Set a monthly limit in Budget Planner to track usage'}
+            </p>
           </div>
         </div>
 
