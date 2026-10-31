@@ -245,3 +245,35 @@
   font-weight: 700;
   color: #1f4363;
 }
+
+
+/* ── Filter button active state ("Clear filters") ───────────────────────── */
+.filterBtnActive {
+  color: #c0392b;
+  border-color: #c0392b;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.filterBtnActive:hover {
+  background-color: #fff5f5;
+}
+
+/* ── Active filter pills ─────────────────────────────────────────────────── */
+.activePills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e8f0f7;
+  color: #1f4363;
+  border: 1px solid #c5d8ea;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import styles from "../styles/Expenses.module.css";
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
@@ -21,78 +21,120 @@ type CategorySummary = {
   percentage: string;
 };
 
+// ── Constants ──────────────────────────────────────────────────────────────
+const CATEGORY_OPTIONS = [
+  'All categories',
+  'Food',
+  'Transport',
+  'Rent',
+  'Data and airtime',
+  'Groceries',
+  'Other',
+];
+
+/** Build the last 13 months (current + 12 previous) as { label, year, month } */
+const buildMonthOptions = () => {
+  const options: { label: string; year: number; month: number }[] = [
+    { label: 'All months', year: -1, month: -1 },
+  ];
+  const now = new Date();
+  for (let i = 0; i < 13; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    options.push({
+      label: d.toLocaleString('en-ZA', { month: 'long', year: 'numeric' }),
+      year: d.getFullYear(),
+      month: d.getMonth(),
+    });
+  }
+  return options;
+};
+
+const MONTH_OPTIONS = buildMonthOptions();
+
+/** Normalise a raw Firestore category to a canonical display label. */
+const normaliseCategory = (raw: string): string => {
+  const key = (raw ?? '').toLowerCase().replace(/[\s&]+/g, '');
+  const map: Record<string, string> = {
+    food:           'Food',
+    transport:      'Transport',
+    rent:           'Rent',
+    dataandairtime: 'Data and airtime',
+    data:           'Data and airtime',
+    groceries:      'Groceries',
+    education:      'Other',
+    other:          'Other',
+  };
+  return map[key] ?? 'Other';
+};
+
+// ── Component ──────────────────────────────────────────────────────────────
 const Expenses: React.FC = () => {
 
-  const [userExpenses, setUserExpenses] = useState<Expense[]>([]);
+  const [userExpenses, setUserExpenses]           = useState<Expense[]>([]);
   const [categoryExpensesData, setCategoryExpensesData] = useState<CategorySummary[]>([]);
   const [totalAmountForExpenses, setTotalAmountForExpense] = useState<number>(0);
-  const [filtered, setFiltered] = useState<Expense[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading]                     = useState<boolean>(false);
+  const [error, setError]                         = useState<string | null>(null);
+
+  // ── Filter state ───────────────────────────────────────────────────────
+  const [search, setSearch]                       = useState<string>('');
+
+  // "Pending" values — what the user has selected in the dropdowns but not applied yet
+  const [pendingCategory, setPendingCategory]     = useState<string>('All categories');
+  const [pendingMonth, setPendingMonth]           = useState<string>('All months');
+
+  // "Applied" values — what was last confirmed via "Apply filters"
+  const [appliedCategory, setAppliedCategory]     = useState<string>('All categories');
+  const [appliedMonth, setAppliedMonth]           = useState<string>('All months');
+
+  // True when applied filters differ from "show everything"
+  const filtersActive =
+    appliedCategory !== 'All categories' || appliedMonth !== 'All months';
+
   const navigate = useNavigate();
 
-  const navigatePage = (path: string) => {
-    navigate("/" + path);
-  };
+  const navigatePage = (path: string) => navigate('/' + path);
 
+  // ── Data fetching ──────────────────────────────────────────────────────
   const buildCategoryData = (data: Expense[]): { categories: CategorySummary[]; total: number } => {
 
     let total = 0;
-
-    // All categories that the app supports, keyed by the lowercase Firestore value
     const categoryMap: Record<string, { label: string; amount: number }> = {
-      food:           { label: "Food",            amount: 0 },
-      transport:      { label: "Transport",        amount: 0 },
-      rent:           { label: "Rent",             amount: 0 },
-      dataandairtime: { label: "Data and airtime", amount: 0 },
-      groceries:      { label: "Groceries",        amount: 0 },
-      other:          { label: "Other",            amount: 0 },
+      food:           { label: 'Food',            amount: 0 },
+      transport:      { label: 'Transport',        amount: 0 },
+      rent:           { label: 'Rent',             amount: 0 },
+      dataandairtime: { label: 'Data and airtime', amount: 0 },
+      groceries:      { label: 'Groceries',        amount: 0 },
+      other:          { label: 'Other',            amount: 0 },
     };
 
     data.forEach((expense) => {
-
       total += expense.amount;
-
-      // Normalise the Firestore category value to a lookup key
-      const raw = (expense.category ?? "other").toLowerCase().replace(/\s+/g, "");
-
-      // Handle known aliases
+      const raw = (expense.category ?? 'other').toLowerCase().replace(/\s+/g, '');
       const key =
-        raw === "data" || raw === "data&airtime" ? "dataandairtime"
-        : raw === "education"                    ? "other"
+        raw === 'data' || raw === 'data&airtime' ? 'dataandairtime'
+        : raw === 'education'                    ? 'other'
         : categoryMap[raw] !== undefined         ? raw
-        : "other";
-
+        : 'other';
       categoryMap[key].amount += expense.amount;
-
     });
 
     const categories: CategorySummary[] = Object.values(categoryMap).map((cat) => ({
       name:       cat.label,
       amount:     `R ${cat.amount.toFixed(2)}`,
-      percentage: total > 0 ? `${((cat.amount / total) * 100).toFixed(1)}%` : "0%",
+      percentage: total > 0 ? `${((cat.amount / total) * 100).toFixed(1)}%` : '0%',
     }));
 
     return { categories, total };
-
   };
 
   const fetchUserExpenses = async () => {
-
     try {
-
       setLoading(true);
-
-      const uid = getAuth().currentUser?.uid || "";
-      const ref = collection(db, "expenses");
-
-      const expensesQuery = query(
-        ref,
-        where("userId", "==", uid)
+      const uid = getAuth().currentUser?.uid || '';
+      const snapshot = await getDocs(
+        query(collection(db, 'expenses'), where('userId', '==', uid))
       );
-      
-      const snapshot = await getDocs(expensesQuery);
 
       if (snapshot.empty) {
         setUserExpenses([]);
@@ -101,12 +143,8 @@ const Expenses: React.FC = () => {
         return;
       }
 
-      const data = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as Expense[];
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Expense[];
 
-      // Sort descending by date for the table view
       data.sort((a, b) => {
         const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
         const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
@@ -114,130 +152,179 @@ const Expenses: React.FC = () => {
       });
 
       setUserExpenses(data);
-      setFiltered(data);
 
-      // Build category summary from the freshly-fetched data (not stale state)
       const { categories, total } = buildCategoryData(data);
       setCategoryExpensesData(categories);
       setTotalAmountForExpense(total);
 
     } catch (e) {
-
-      console.log("Error occured: " + e);
-      setError("Error occured: " + e);
-
+      console.log('Error occured: ' + e);
+      setError('Error occured: ' + e);
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   const deleteExpense = async (id: string) => {
-
     try {
-
-      const ref = doc(db, "expenses", id);
-      await deleteDoc(ref);
+      await deleteDoc(doc(db, 'expenses', id));
       fetchUserExpenses();
-
     } catch (e) {
-
-      setError("Error occured trying to delete expense. Error: " + e);
-
+      setError('Error occured trying to delete expense. Error: ' + e);
     }
-
   };
 
-
   useEffect(() => {
-
-    try {
-      fetchUserExpenses();
-    } catch (e) {
-      console.log("Error occured: " + e);
-    }
-
+    fetchUserExpenses();
   }, []);
 
+  // ── Filter handlers ────────────────────────────────────────────────────
+  const applyFilters = () => {
+    setAppliedCategory(pendingCategory);
+    setAppliedMonth(pendingMonth);
+  };
 
-  // Search/filter — searches description, category, and date
-  useEffect(() => {
+  const clearFilters = () => {
+    setPendingCategory('All categories');
+    setPendingMonth('All months');
+    setAppliedCategory('All categories');
+    setAppliedMonth('All months');
+  };
 
-    try {
+  // ── Derived display list (memo so it only recalculates when deps change) ─
+  const displayList = useMemo(() => {
+    let list = [...userExpenses];
 
-      if (!search.trim()) {
-        setFiltered(userExpenses);
-        return;
-      }
-
+    // 1. Live search (description, category, date)
+    if (search.trim()) {
       const s = search.toLowerCase();
-
-      const result = userExpenses.filter((expense) => {
+      list = list.filter((expense) => {
         const dateStr = expense.date?.toDate
           ? expense.date.toDate().toDateString()
           : new Date(expense.date).toDateString();
-
         return (
-          (expense.description ?? "").toLowerCase().includes(s) ||
-          (expense.category    ?? "").toLowerCase().includes(s) ||
+          (expense.description ?? '').toLowerCase().includes(s) ||
+          (expense.category    ?? '').toLowerCase().includes(s) ||
           dateStr.toLowerCase().includes(s)
         );
       });
-
-      setFiltered(result);
-
-    } catch (e) {
-
-      console.log("Error occured: " + e);
-
     }
 
-  }, [search, userExpenses]);
+    // 2. Applied category filter
+    if (appliedCategory !== 'All categories') {
+      list = list.filter(
+        (expense) => normaliseCategory(expense.category) === appliedCategory
+      );
+    }
 
+    // 3. Applied month filter
+    if (appliedMonth !== 'All months') {
+      const monthOption = MONTH_OPTIONS.find((m) => m.label === appliedMonth);
+      if (monthOption) {
+        list = list.filter((expense) => {
+          const d = expense.date?.toDate
+            ? expense.date.toDate()
+            : new Date(expense.date);
+          return d.getFullYear() === monthOption.year && d.getMonth() === monthOption.month;
+        });
+      }
+    }
 
-  const displayList = search.trim() ? filtered : userExpenses;
+    return list;
+  }, [userExpenses, search, appliedCategory, appliedMonth]);
 
+  // ── Render ─────────────────────────────────────────────────────────────
+  const emptyMessage =
+    search.trim() || filtersActive
+      ? 'No expenses match your filters.'
+      : 'No expenses recorded yet.';
 
   return (
     <div className={styles.container}>
+
       {/* Header */}
       <header className={styles.header}>
         <h1 className={styles.pageTitle}>Expenses</h1>
-        <button className={styles.primaryBtn} onClick={() => navigatePage("addExpenses")}>Add expense</button>
+        <button className={styles.primaryBtn} onClick={() => navigatePage('addExpenses')}>
+          Add expense
+        </button>
       </header>
 
       {error && (
-          <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
-              {error}
-          </div>
+        <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem' }}>
+          {error}
+        </div>
       )}
 
       {/* Filter Bar */}
       <div className={styles.filterBar}>
-        <input 
-          type="text" 
-          placeholder="Search expenses" 
-          className={styles.searchInput} 
+
+        {/* Live search */}
+        <input
+          type="text"
+          placeholder="Search expenses"
+          className={styles.searchInput}
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
+        {/* Category dropdown — pending, not applied yet */}
         <div className={styles.selectWrapper}>
-          <select className={styles.selectInput}>
-            <option>All categories</option>
+          <select
+            className={styles.selectInput}
+            value={pendingCategory}
+            onChange={(e) => setPendingCategory(e.target.value)}
+          >
+            {CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
           </select>
         </div>
+
+        {/* Month dropdown — pending, not applied yet */}
         <div className={styles.selectWrapper}>
-          <select className={styles.selectInput}>
-            <option>This month</option>
+          <select
+            className={styles.selectInput}
+            value={pendingMonth}
+            onChange={(e) => setPendingMonth(e.target.value)}
+          >
+            {MONTH_OPTIONS.map((opt) => (
+              <option key={opt.label} value={opt.label}>{opt.label}</option>
+            ))}
           </select>
         </div>
-        <button className={styles.filterBtn}>Apply filters</button>
+
+        {/* Apply / Clear button */}
+        {filtersActive ? (
+          <button
+            className={`${styles.filterBtn} ${styles.filterBtnActive}`}
+            onClick={clearFilters}
+          >
+            Clear filters
+          </button>
+        ) : (
+          <button className={styles.filterBtn} onClick={applyFilters}>
+            Apply filters
+          </button>
+        )}
+
       </div>
+
+      {/* Active filter pills */}
+      {filtersActive && (
+        <div className={styles.activePills}>
+          {appliedCategory !== 'All categories' && (
+            <span className={styles.pill}>{appliedCategory}</span>
+          )}
+          {appliedMonth !== 'All months' && (
+            <span className={styles.pill}>{appliedMonth}</span>
+          )}
+        </div>
+      )}
 
       {/* Main Layout */}
       <div className={styles.layout}>
-        
+
         {/* Left Column: Expenses Table */}
         <div className={styles.tableCard}>
           <div className={styles.tableWrapper}>
@@ -254,12 +341,14 @@ const Expenses: React.FC = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5}>Loading expenses...</td>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem' }}>
+                      Loading expenses...
+                    </td>
                   </tr>
                 ) : displayList.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '1rem' }}>
-                      {search.trim() ? "No expenses match your search." : "No expenses recorded yet."}
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: '#888' }}>
+                      {emptyMessage}
                     </td>
                   </tr>
                 ) : (
@@ -267,22 +356,23 @@ const Expenses: React.FC = () => {
                     <tr key={expense.id ?? index}>
                       <td className={styles.textMuted}>
                         {expense.date?.toDate
-                          ? expense.date.toDate().toLocaleDateString()
-                          : new Date(expense.date).toLocaleDateString()}
+                          ? expense.date.toDate().toLocaleDateString('en-ZA')
+                          : new Date(expense.date).toLocaleDateString('en-ZA')}
                       </td>
                       <td className={styles.textMuted} style={{ textTransform: 'capitalize' }}>
-                        {expense.category}
+                        {normaliseCategory(expense.category)}
                       </td>
                       <td className={styles.textDark}>{expense.description}</td>
                       <td className={`${styles.textRight} ${styles.textBold}`}>
                         R {Number(expense.amount).toFixed(2)}
                       </td>
                       <td className={styles.textRight}>
-                        <button 
+                        <button
                           className={styles.editLink}
                           onClick={() => deleteExpense(expense.id)}
+                          title="Delete expense"
                         >
-                          <Trash2 />
+                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>
@@ -291,10 +381,10 @@ const Expenses: React.FC = () => {
               </tbody>
             </table>
           </div>
-          
+
           <div className={styles.pagination}>
             <span className={styles.textMuted}>
-              Showing {displayList.length} of {userExpenses.length} expense{userExpenses.length !== 1 ? "s" : ""}
+              Showing {displayList.length} of {userExpenses.length} expense{userExpenses.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -321,8 +411,8 @@ const Expenses: React.FC = () => {
                     <span className={styles.categoryAmount}>{cat.amount}</span>
                   </div>
                   <div className={styles.progressBarBg}>
-                    <div 
-                      className={styles.progressBarFill} 
+                    <div
+                      className={styles.progressBarFill}
                       style={{ width: cat.percentage }}
                     ></div>
                   </div>
