@@ -143,13 +143,13 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
           
           <div className={styles.balanceSection}>
             <p className={styles.balanceLabel}>BALANCE LEFT</p>
-            <h2 className={styles.balanceAmount}>R {userDetails.balanceLeft}</h2>
+            <h2 className={styles.balanceAmount}>R 0</h2>
             
             <div className={styles.progressBarContainer}>
               <div className={styles.progressBarFill} style={{ width: `${((userDetails.balanceLeft / userDetails.totalBalance) * 100).toFixed(2)}%` }}></div>
             </div>
             
-            <p className={styles.progressText}>{((userDetails.balanceLeft / userDetails.totalBalance) * 100).toFixed(2)}% of your monthly limit used</p>
+            <p className={styles.progressText}>0% of your monthly limit used</p>
           </div>
         </div>
 
