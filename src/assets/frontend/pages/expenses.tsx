@@ -6,51 +6,77 @@ import { getDocs, query, where, collection, deleteDoc, doc } from 'firebase/fire
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { Trash2 } from 'lucide-react';
-/*
-const expensesData = [
-  { date: '26 Oct', item: 'Groceries at Shoprite', category: 'Groceries', amount: 'R 190.00' },
-  { date: '25 Oct', item: 'Taxi to campus', category: 'Transport', amount: 'R 34.00' },
-  { date: '24 Oct', item: 'Data bundle 2GB', category: 'Data', amount: 'R 99.00' },
-  { date: '23 Oct', item: 'Lunch, campus cafe', category: 'Food', amount: 'R 48.00' },
-  { date: '22 Oct', item: 'Printing, library', category: 'Education', amount: 'R 26.00' },
-  { date: '21 Oct', item: 'Textbook, second hand', category: 'Education', amount: 'R 300.00' },
-  { date: '20 Oct', item: 'Airtime top up', category: 'Data', amount: 'R 60.00' },
-  { date: '19 Oct', item: 'Bus fare', category: 'Transport', amount: 'R 25.00' },
-];
 
+type Expense = {
+  id: string;
+  date: any;
+  description: string;
+  category: string;
+  amount: number;
+};
 
-const categoryData = [
-  { name: 'Food', amount: 'R 0.00', percentage: '0%' },
-  { name: 'Transport', amount: 'R 0.00', percentage: '0%' },
-  { name: 'Data and airtime', amount: 'R 0.00', percentage: '0%' },
-  { name: 'Education', amount: 'R 0.00', percentage: '0%' },
-];
-*/
-
-type Expenses = {
-  date: Date,
-  item: string,
-  category: string,
-  amount: number
-}
+type CategorySummary = {
+  name: string;
+  amount: string;
+  percentage: string;
+};
 
 const Expenses: React.FC = () => {
 
-
-  const [userExpenses, setUserExpenses] = useState<any>([]);
-  const [categoryExpensesData, setCategoryExpensesData] = useState<any>([]);
+  const [userExpenses, setUserExpenses] = useState<Expense[]>([]);
+  const [categoryExpensesData, setCategoryExpensesData] = useState<CategorySummary[]>([]);
   const [totalAmountForExpenses, setTotalAmountForExpense] = useState<number>(0);
-  const [filtered, setFiltered] = useState<Expenses[]>([]);
-  const [search, setSearch] = useState<String>("");
+  const [filtered, setFiltered] = useState<Expense[]>([]);
+  const [search, setSearch] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<String | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const navigatePage = (path: string) => {
-
     navigate("/" + path);
+  };
 
-  }
+  const buildCategoryData = (data: Expense[]): { categories: CategorySummary[]; total: number } => {
+
+    let total = 0;
+
+    // All categories that the app supports, keyed by the lowercase Firestore value
+    const categoryMap: Record<string, { label: string; amount: number }> = {
+      food:           { label: "Food",            amount: 0 },
+      transport:      { label: "Transport",        amount: 0 },
+      rent:           { label: "Rent",             amount: 0 },
+      dataandairtime: { label: "Data and airtime", amount: 0 },
+      groceries:      { label: "Groceries",        amount: 0 },
+      other:          { label: "Other",            amount: 0 },
+    };
+
+    data.forEach((expense) => {
+
+      total += expense.amount;
+
+      // Normalise the Firestore category value to a lookup key
+      const raw = (expense.category ?? "other").toLowerCase().replace(/\s+/g, "");
+
+      // Handle known aliases
+      const key =
+        raw === "data" || raw === "data&airtime" ? "dataandairtime"
+        : raw === "education"                    ? "other"
+        : categoryMap[raw] !== undefined         ? raw
+        : "other";
+
+      categoryMap[key].amount += expense.amount;
+
+    });
+
+    const categories: CategorySummary[] = Object.values(categoryMap).map((cat) => ({
+      name:       cat.label,
+      amount:     `R ${cat.amount.toFixed(2)}`,
+      percentage: total > 0 ? `${((cat.amount / total) * 100).toFixed(1)}%` : "0%",
+    }));
+
+    return { categories, total };
+
+  };
 
   const fetchUserExpenses = async () => {
 
@@ -69,65 +95,31 @@ const Expenses: React.FC = () => {
       const snapshot = await getDocs(expensesQuery);
 
       if (snapshot.empty) {
-          console.error("No database document found");
-          //setError("Error occured: No database document found");
-          return false;
+        setUserExpenses([]);
+        setCategoryExpensesData([]);
+        setTotalAmountForExpense(0);
+        return;
       }
 
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const data = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as Expense[];
+
+      // Sort descending by date for the table view
+      data.sort((a, b) => {
+        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+      });
 
       setUserExpenses(data);
+      setFiltered(data);
 
-      let total = 0;
-      let categoryData = [
-        { name: 'Food', amount: "0", percentage: "0%" },
-        { name: 'Transport', amount: "0", percentage: "0%" },
-        { name: 'Data and airtime', amount: "0", percentage: "0%" },
-        { name: 'Groceries', amount: "0", percentage: "0%" },
-        { name: 'Other', amount: "0", percentage: "0%" },
-      ];
-
-      userExpenses.forEach((e: any) => {
-
-        total = total + e.amount;
-
-        // Normalize category name from database to match our display names
-        let normalizedCategory = e.category;
-        if (e.category.toLowerCase() === "data" || e.category.toLowerCase() === "dataandairtime" || e.category.toLowerCase() === "data and airtime") {
-          normalizedCategory = "Data and airtime";
-        } else if (e.category.toLowerCase() === "education") {
-          normalizedCategory = "Other"; // Map education to Other since we don't have Education category
-        }
-
-        let categoryIndex = categoryData.findIndex(
-          (c) => c.name.toLowerCase() === normalizedCategory.toLowerCase()
-        );
-
-        if (categoryIndex !== -1) {
-
-          let currentAmount = parseFloat(categoryData[categoryIndex].amount);
-          let newAmount = currentAmount + e.amount;
-          categoryData[categoryIndex].amount = newAmount.toFixed(2);
-
-        }
-
-      });
-
-      // Calculate percentages after all amounts are aggregated
-      categoryData.forEach((cat) => {
-        let catAmount = parseFloat(cat.amount);
-        cat.percentage = total > 0 ? ((catAmount / total) * 100).toFixed(2) + "%" : "0%";
-      });
-
-      setCategoryExpensesData(categoryData as any);
-
+      // Build category summary from the freshly-fetched data (not stale state)
+      const { categories, total } = buildCategoryData(data);
+      setCategoryExpensesData(categories);
       setTotalAmountForExpense(total);
-
-
-
 
     } catch (e) {
 
@@ -140,16 +132,14 @@ const Expenses: React.FC = () => {
 
     }
 
-  }
+  };
 
   const deleteExpense = async (id: string) => {
 
     try {
 
       const ref = doc(db, "expenses", id);
-
       await deleteDoc(ref);
-
       fetchUserExpenses();
 
     } catch (e) {
@@ -158,49 +148,56 @@ const Expenses: React.FC = () => {
 
     }
 
-  }
+  };
 
 
   useEffect(() => {
 
     try {
-
       fetchUserExpenses();
-
     } catch (e) {
-
       console.log("Error occured: " + e);
-
-    } 
+    }
 
   }, []);
 
 
-
+  // Search/filter — searches description, category, and date
   useEffect(() => {
 
     try {
 
-      let list = [...userExpenses];
-
-      if (search.trim()) {
-        const s = search.toLowerCase();
-        list = list.filter((b: any) =>
-        (b.courseTitle || "").toLowerCase().includes(s) ||
-        (b.companyName || "").toLowerCase().includes(s) ||
-        (b.facilitatorName || "").toLowerCase().includes(s)
-        );
+      if (!search.trim()) {
+        setFiltered(userExpenses);
+        return;
       }
 
-      setFiltered(list);
+      const s = search.toLowerCase();
+
+      const result = userExpenses.filter((expense) => {
+        const dateStr = expense.date?.toDate
+          ? expense.date.toDate().toDateString()
+          : new Date(expense.date).toDateString();
+
+        return (
+          (expense.description ?? "").toLowerCase().includes(s) ||
+          (expense.category    ?? "").toLowerCase().includes(s) ||
+          dateStr.toLowerCase().includes(s)
+        );
+      });
+
+      setFiltered(result);
 
     } catch (e) {
 
       console.log("Error occured: " + e);
 
-    } 
+    }
 
-  }, [search]);
+  }, [search, userExpenses]);
+
+
+  const displayList = search.trim() ? filtered : userExpenses;
 
 
   return (
@@ -255,41 +252,31 @@ const Expenses: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {!loading ? (
-                  <>
-                  {/*
-                  {expensesData.map((expense, index) => (
-                    <tr key={index}>
-                      <td className={styles.textMuted}>{expense.date}</td>
-                      <td className={styles.textDark}>{expense.item}</td>
-                      <td className={styles.textMuted}>{expense.category}</td>
-                      <td className={`${styles.textRight} ${styles.textBold}`}>
-                        {expense.amount}
-                      </td>
-                      <td className={styles.textRight}>
-                        <button className={styles.editLink}>Edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                  */}
-  
-  
-                  {(filtered.entries.length != 0 ? filtered : userExpenses).map((expense: any, index: any) => (
-                    <tr key={index}>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5}>Loading expenses...</td>
+                  </tr>
+                ) : displayList.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '1rem' }}>
+                      {search.trim() ? "No expenses match your search." : "No expenses recorded yet."}
+                    </td>
+                  </tr>
+                ) : (
+                  displayList.map((expense, index) => (
+                    <tr key={expense.id ?? index}>
                       <td className={styles.textMuted}>
-                      {
-                        expense.date?.toDate 
-                          ? expense.date.toDate().toDateString() 
-                          : new Date(expense.date).toDateString()
-                      }
+                        {expense.date?.toDate
+                          ? expense.date.toDate().toLocaleDateString()
+                          : new Date(expense.date).toLocaleDateString()}
                       </td>
-                      <td className={styles.textMuted}>{expense.category}</td>
+                      <td className={styles.textMuted} style={{ textTransform: 'capitalize' }}>
+                        {expense.category}
+                      </td>
                       <td className={styles.textDark}>{expense.description}</td>
                       <td className={`${styles.textRight} ${styles.textBold}`}>
-                        {expense.amount}
+                        R {Number(expense.amount).toFixed(2)}
                       </td>
-                      
-                      {/* replace with icon */}
                       <td className={styles.textRight}>
                         <button 
                           className={styles.editLink}
@@ -298,36 +285,36 @@ const Expenses: React.FC = () => {
                           <Trash2 />
                         </button>
                       </td>
-                      
                     </tr>
-                  ))}
-                  </>
-                )
-                :
-                (
-                  <tr>
-                    <td>Loading expenses...</td>
-                  </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
           
           <div className={styles.pagination}>
-            
-              <span className={styles.textMuted}>Showing {userExpenses.length} expenses</span>
-              {/*<button className={styles.nextPageBtn}>Next page</button>*/}
-            
+            <span className={styles.textMuted}>
+              Showing {displayList.length} of {userExpenses.length} expense{userExpenses.length !== 1 ? "s" : ""}
+            </span>
           </div>
         </div>
 
         {/* Right Column: Category Summary */}
         <div className={styles.summaryCard}>
           <h3 className={styles.summaryTitle}>Expenses by category</h3>
-          
-          {/*
-            <div className={styles.categoryList}>
-              {categoryData.map((cat, index) => (
+
+          <div className={styles.categoryList}>
+            {loading ? (
+              <div style={{ padding: '1rem', textAlign: 'center' }}>Loading...</div>
+            ) : categoryExpensesData.length === 0 ? (
+              <div className={styles.categoryItem}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryName}>No expenses found</span>
+                  <span className={styles.categoryAmount}></span>
+                </div>
+              </div>
+            ) : (
+              categoryExpensesData.map((cat, index) => (
                 <div key={index} className={styles.categoryItem}>
                   <div className={styles.categoryHeader}>
                     <span className={styles.categoryName}>{cat.name}</span>
@@ -339,52 +326,15 @@ const Expenses: React.FC = () => {
                       style={{ width: cat.percentage }}
                     ></div>
                   </div>
+                  <span style={{ fontSize: '0.75rem', color: '#888' }}>{cat.percentage}</span>
                 </div>
-              ))}
-            </div>
-          */}
-
-            <div className={styles.categoryList}>
-              {categoryExpensesData ? (
-                <>
-                  {categoryExpensesData.map((cat: any, index: number) => (
-                    <div key={index} className={styles.categoryItem}>
-                      <div className={styles.categoryHeader}>
-                        <span className={styles.categoryName}>{cat.name}</span>
-                        <span className={styles.categoryAmount}>{cat.amount}</span>
-                      </div>
-                      <div className={styles.progressBarBg}>
-                        <div 
-                          className={styles.progressBarFill} 
-                          style={{ width: cat.percentage }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )
-              :
-              (
-                <>
-                  <div className={styles.categoryItem}>
-                    <div className={styles.categoryHeader}>
-                      <span className={styles.categoryName}>No expenses found</span>
-                      <span className={styles.categoryAmount}></span>
-                    </div>
-                    <div className={styles.progressBarBg}>
-                      <div 
-                        className={styles.progressBarFill} 
-                        style={{ width: "" }}
-                      ></div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+              ))
+            )}
+          </div>
 
           <div className={styles.summaryFooter}>
             <span className={styles.totalLabel}>Total</span>
-            <span className={styles.totalAmount}>R {totalAmountForExpenses}</span>
+            <span className={styles.totalAmount}>R {totalAmountForExpenses.toFixed(2)}</span>
           </div>
         </div>
 

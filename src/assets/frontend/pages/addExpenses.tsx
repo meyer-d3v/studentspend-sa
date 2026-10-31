@@ -14,6 +14,11 @@ type Expenses = {
   amount: number
 }
 
+type BudgetData = {
+  allocated: number;
+  spent: number;
+};
+
 const AddExpensePage: React.FC = () => {
 
   const [formData, setFormData] = useState({
@@ -27,6 +32,10 @@ const AddExpensePage: React.FC = () => {
   const [activeSelection, setActiveSelection] = useState<string>("");
   const [error, setError] = useState<String | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Budget widget state
+  const [budgetData, setBudgetData] = useState<BudgetData>({ allocated: 0, spent: 0 });
+  const [budgetLoading, setBudgetLoading] = useState<boolean>(false);
 
   const saveData = async () => {
 
@@ -79,6 +88,11 @@ const AddExpensePage: React.FC = () => {
       setLoading(false);
       alert("Data saved to database");
 
+      // Refresh budget widget after saving an expense
+      if (formData.category) {
+        fetchCategoryBudget(formData.category);
+      }
+
     } catch (e) {
 
       console.log("Error occured: " + e);
@@ -126,6 +140,52 @@ const AddExpensePage: React.FC = () => {
 
   }
 
+  /**
+   * Fetches the budget allocation and amount already spent for a given category
+   * from the `budget_planner/{uid}` document.
+   */
+  const fetchCategoryBudget = async (category: string) => {
+
+    if (!category) {
+      setBudgetData({ allocated: 0, spent: 0 });
+      return;
+    }
+
+    try {
+
+      setBudgetLoading(true);
+
+      const uid = getAuth().currentUser?.uid || "";
+      const budgetRef = doc(db, "budget_planner", uid);
+      const snapshot = await getDoc(budgetRef);
+
+      if (!snapshot.exists()) {
+        setBudgetData({ allocated: 0, spent: 0 });
+        return;
+      }
+
+      const data = snapshot.data() as Record<string, any>;
+
+      // The allocated amount lives at the top-level key (e.g. data.groceries)
+      const allocated: number = data[category] ?? 0;
+
+      // The amount spent so far lives under spentTotals (e.g. data.spentTotals.groceries)
+      const spent: number = data?.spentTotals?.[category] ?? 0;
+
+      setBudgetData({ allocated, spent });
+
+    } catch (e) {
+
+      console.log("Error fetching category budget: " + e);
+
+    } finally {
+
+      setBudgetLoading(false);
+
+    }
+
+  };
+
 
   useEffect(() => {
 
@@ -140,6 +200,36 @@ const AddExpensePage: React.FC = () => {
     }
 
   }, []);
+
+  // Re-fetch budget data whenever the selected category changes
+  useEffect(() => {
+
+    fetchCategoryBudget(activeSelection);
+
+  }, [activeSelection]);
+
+  // Derived budget values
+  const remainingBudget = Math.max(budgetData.allocated - budgetData.spent, 0);
+  const projectedSpent  = budgetData.spent + (formData.amount || 0);
+  const spentPercent    = budgetData.allocated > 0
+    ? Math.min((projectedSpent / budgetData.allocated) * 100, 100)
+    : 0;
+  const currentPercent  = budgetData.allocated > 0
+    ? Math.min((budgetData.spent / budgetData.allocated) * 100, 100)
+    : 0;
+
+  // Human-readable category label for the widget title
+  const categoryLabel: Record<string, string> = {
+    transport: "Transport",
+    food: "Food",
+    rent: "Rent",
+    dataAndAirtime: "Data & Airtime",
+    groceries: "Groceries",
+    entertainment: "Other",
+    other: "Other",
+  };
+
+  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
 
 
   return (
@@ -295,28 +385,6 @@ const AddExpensePage: React.FC = () => {
               </button>
             
 
-
-
-              {/*}
-              {categories.map((c) => (
-                <button 
-                  key={c}
-                  value={c}
-                  className={`${styles.categoryChip} ${activeSelection === c && styles.activeChip}`}
-                  onClick={() => {
-                    if (activeSelection == c) {
-                      setActiveSelection("");
-                    } else {
-                      setActiveSelection(c);
-                    }
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-
-              */}
-
             </div>
           </div>
 
@@ -367,20 +435,44 @@ const AddExpensePage: React.FC = () => {
           
           {/* Budget Widget */}
           <div className={styles.widgetCard}>
-            <h3 className={styles.widgetTitle}>Groceries budget</h3>
+            <h3 className={styles.widgetTitle}>
+              {activeSelection ? `${categoryLabel[activeSelection] ?? activeSelection} budget` : "Category budget"}
+            </h3>
             
-            <div className={styles.budgetHeader}>
-              <span className={styles.budgetValue}>R 160</span>
-              <span className={styles.budgetLimit}>left of R 500</span>
-            </div>
-            
-            <div className={styles.progressBarContainer}>
-              <div className={styles.progressBarFill} style={{ width: '68%' }}></div>
-            </div>
-            
-            <p className={styles.widgetSubtext}>
-              Saving this expense takes you to 68% of the category for October.
-            </p>
+            {budgetLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                <LoaderCircle size={20} className={styles.loaderCircle} />
+              </div>
+            ) : activeSelection && budgetData.allocated > 0 ? (
+              <>
+                <div className={styles.budgetHeader}>
+                  <span className={styles.budgetValue}>R {remainingBudget.toFixed(2)}</span>
+                  <span className={styles.budgetLimit}>left of R {budgetData.allocated.toFixed(2)}</span>
+                </div>
+                
+                <div className={styles.progressBarContainer}>
+                  <div
+                    className={styles.progressBarFill}
+                    style={{ width: `${spentPercent.toFixed(1)}%` }}
+                  ></div>
+                </div>
+                
+                <p className={styles.widgetSubtext}>
+                  {formData.amount > 0
+                    ? `Saving this expense takes you to ${spentPercent.toFixed(0)}% of the ${categoryLabel[activeSelection] ?? activeSelection} category for ${currentMonth}.`
+                    : `You have used ${currentPercent.toFixed(0)}% of your ${categoryLabel[activeSelection] ?? activeSelection} budget for ${currentMonth}.`
+                  }
+                </p>
+              </>
+            ) : activeSelection && budgetData.allocated === 0 ? (
+              <p className={styles.widgetSubtext}>
+                No budget allocated for {categoryLabel[activeSelection] ?? activeSelection}. Set one in the Budget Planner.
+              </p>
+            ) : (
+              <p className={styles.widgetSubtext}>
+                Select a category above to see your budget status.
+              </p>
+            )}
           </div>
 
           {/* Recent Entries Widget */}
