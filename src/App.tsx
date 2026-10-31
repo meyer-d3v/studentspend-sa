@@ -20,6 +20,7 @@ import About from './assets/frontend/pages/about';
 import AddExpensePage from './assets/frontend/pages/addExpenses';
 import Settings from './assets/frontend/pages/settings';
 import FinancialTips from './assets/frontend/pages/financialTips';
+import TipDetail from './assets/frontend/pages/tipDetail';
 import { useContext } from './assets/backend/useContext/user';
 import './App.css'
 
@@ -88,6 +89,7 @@ function App() {
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/addExpenses" element={<AddExpensePage />} />
         <Route path="/financialTips" element={<FinancialTips />} />
+        <Route path="/financialTips/:tipId" element={<TipDetail />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
         
