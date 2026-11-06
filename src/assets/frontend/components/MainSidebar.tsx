@@ -5,7 +5,7 @@ import { collection, doc, getDoc, getDocs, query, where } from "firebase/firesto
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { getAuth } from "firebase/auth";
-import { safeNum, safePercent, safeDate } from "../utils/safeguards";
+import { safeNum, safePercent, safeDate, migrateBudgetPlannerGroceries, migrateExpenseCategory } from "../utils/safeguards";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -61,7 +61,13 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
       const firstName = (userData?.firstName || userData?.firstname || "").trim();
 
-      // 2. Fetch all expenses for this user to calculate current month total
+      // 2. Migrate legacy groceries in budget_planner and fetch all expenses for this user
+      const budgetRef = doc(db, "budget_planner", uid);
+      const budgetSnap = await getDoc(budgetRef);
+      if (budgetSnap.exists()) {
+        await migrateBudgetPlannerGroceries(budgetRef, budgetSnap.data() as Record<string, any>);
+      }
+
       const expensesRef = collection(db, "expenses");
       const expensesQuery = query(expensesRef, where("userId", "==", uid));
       const expensesSnapshot = await getDocs(expensesQuery);
@@ -73,7 +79,7 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       let currentMonthSpent = 0;
 
       expensesSnapshot.docs.forEach((docSnap) => {
-        const exp = docSnap.data();
+        const exp = migrateExpenseCategory(db, docSnap.data() as any, docSnap.id);
         const expenseDate = safeDate(exp.date || exp.createdAt);
 
         if (

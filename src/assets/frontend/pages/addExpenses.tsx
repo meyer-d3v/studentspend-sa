@@ -5,7 +5,7 @@ import { db } from "../../backend/firebaseConfig/config";
 import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
-import { safeNum, safePercent, formatRand } from '../utils/safeguards';
+import { safeNum, safePercent, formatRand, migrateBudgetPlannerGroceries, migrateExpenseCategory } from '../utils/safeguards';
 
 type Expenses = {
   id: string,
@@ -57,23 +57,29 @@ const AddExpensePage: React.FC = () => {
 
       } 
 
+      await migrateBudgetPlannerGroceries(budgetRef, budgetSnapshot.data() as Record<string, any>);
+
       const amountNum = safeNum(formData.amount, 0);
+      const normalizedCategory =
+        formData.category.toLowerCase() === "groceries"
+          ? "entertainment"
+          : formData.category;
 
       await addDoc(expensesRef, {
         userId: uid,
         date: formData.date,
         amount: amountNum,
         description: formData.description,
-        category: formData.category,
+        category: normalizedCategory,
         notes: formData.notes,
         createdAt: serverTimestamp()
       });
 
       // Ensure category key exactly matches budget_planner schema (e.g. dataAndAirtime)
       const catKey =
-        formData.category === "dataandairtime" || formData.category === "dataAndAirtime"
+        normalizedCategory === "dataandairtime" || normalizedCategory === "dataAndAirtime"
           ? "dataAndAirtime"
-          : formData.category.toLowerCase();
+          : normalizedCategory.toLowerCase();
 
       await updateDoc(budgetRef, {
         [`spentTotals.${catKey}`]: increment(amountNum)
@@ -88,7 +94,7 @@ const AddExpensePage: React.FC = () => {
           createdAt: serverTimestamp(),
           status: 'info',
           title: 'Large expense recorded',
-          description: `An expense of R${amountNum} was added to ${formData.category}, above your R 250 large expense threshold.`
+          description: `An expense of R${amountNum} was added to ${normalizedCategory}, above your R 250 large expense threshold.`
         });
 
       }
@@ -98,8 +104,8 @@ const AddExpensePage: React.FC = () => {
       alert("Data saved to database");
 
       // Refresh budget widget after saving an expense
-      if (formData.category) {
-        fetchCategoryBudget(formData.category);
+      if (normalizedCategory) {
+        fetchCategoryBudget(normalizedCategory);
       }
 
     } catch (e) {
@@ -134,10 +140,16 @@ const AddExpensePage: React.FC = () => {
       const snapshot = await getDocs(expensesQuery);
 
 
-      const data = snapshot?.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Expenses));
+      const data = snapshot?.docs.map((docSnap) =>
+        migrateExpenseCategory(
+          db,
+          {
+            id: docSnap.id,
+            ...docSnap.data(),
+          } as Expenses,
+          docSnap.id
+        )
+      );
 
       setUserExpenses(data || []);
 
@@ -173,17 +185,20 @@ const AddExpensePage: React.FC = () => {
         return;
       }
 
-      const data = snapshot.data() as Record<string, any>;
+      const rawData = snapshot.data() as Record<string, any>;
+      const data = (await migrateBudgetPlannerGroceries(budgetRef, rawData)) || {};
 
       const catKey =
         category === "dataandairtime" || category === "dataAndAirtime"
           ? "dataAndAirtime"
+          : category.toLowerCase() === "groceries"
+          ? "entertainment"
           : category.toLowerCase();
 
-      // The allocated amount lives at the top-level key (e.g. data.groceries)
+      // The allocated amount lives at the top-level key (e.g. data.entertainment)
       const allocated: number = safeNum(data[catKey]);
 
-      // The amount spent so far lives under spentTotals (e.g. data.spentTotals.groceries)
+      // The amount spent so far lives under spentTotals (e.g. data.spentTotals.entertainment)
       const spent: number = safeNum(data?.spentTotals?.[catKey]);
 
       setBudgetData({ allocated, spent });
@@ -237,8 +252,7 @@ const AddExpensePage: React.FC = () => {
     food: "Food",
     rent: "Rent",
     dataAndAirtime: "Data & Airtime",
-    groceries: "Groceries",
-    entertainment: "Other",
+    entertainment: "Entertainment",
     other: "Other",
   };
 
@@ -368,22 +382,22 @@ const AddExpensePage: React.FC = () => {
               </button>
               
               <button 
-                className={`${styles.categoryChip} ${activeSelection === "groceries" && styles.activeChip}`}
+                className={`${styles.categoryChip} ${activeSelection === "entertainment" && styles.activeChip}`}
                 onClick={() => {
                   
-                  setActiveSelection("groceries");
+                  setActiveSelection("entertainment");
                   setFormData((prev) => ({
                     ...prev,
-                    category: "groceries"
+                    category: "entertainment"
                   }))}
                 }
 
               >
-                Groceries
+                Entertainment
               </button>
               
               <button 
-                className={`${styles.categoryChip} ${(activeSelection === "other" || activeSelection === "entertainment") && styles.activeChip}`}
+                className={`${styles.categoryChip} ${activeSelection === "other" && styles.activeChip}`}
                 onClick={() => {
                   
                   setActiveSelection("other");

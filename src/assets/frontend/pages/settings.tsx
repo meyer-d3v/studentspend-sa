@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from "../../backend/firebaseConfig/config";
 import { getDoc, getDocs, doc, updateDoc, collection, query, where } from 'firebase/firestore';
 import { jsPDF } from 'jspdf';
-import { safeNum, safeDate, formatRand } from '../utils/safeguards';
+import { safeNum, safeDate, formatRand, migrateBudgetPlannerGroceries, migrateExpenseCategory } from '../utils/safeguards';
 
 export type User = {
   firstName: string;
@@ -172,11 +172,15 @@ const Settings: React.FC = () => {
       const expensesSnap = await getDocs(
         query(collection(db, "expenses"), where("userId", "==", uid))
       );
-      const expenses = expensesSnap.docs.map((d) => d.data());
+      const expenses = expensesSnap.docs.map((d) =>
+        migrateExpenseCategory(db, d.data() as any, d.id)
+      );
 
       // Fetch budget planner
-      const budgetSnap = await getDoc(doc(db, "budget_planner", uid));
-      const budget = budgetSnap.exists() ? budgetSnap.data() : null;
+      const budgetRef = doc(db, "budget_planner", uid);
+      const budgetSnap = await getDoc(budgetRef);
+      const rawBudget = budgetSnap.exists() ? budgetSnap.data() : null;
+      const budget = await migrateBudgetPlannerGroceries(budgetRef, rawBudget);
 
       // ── Build PDF ──────────────────────────────────────────────────────
       const pdf   = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -263,10 +267,10 @@ const Settings: React.FC = () => {
       if (budget) {
         checkPage(60);
         heading("Budget allocations");
-        const cats = ["transport","food","rent","dataAndAirtime","groceries","other"];
+        const cats = ["transport","food","rent","dataAndAirtime","entertainment","other"];
         const labels: Record<string,string> = {
           transport:"Transport", food:"Food", rent:"Rent",
-          dataAndAirtime:"Data & Airtime", groceries:"Groceries", other:"Other"
+          dataAndAirtime:"Data & Airtime", entertainment:"Entertainment", other:"Other"
         };
         cats.forEach((cat, i) => {
           if (i % 2 === 0) { checkPage(14); }

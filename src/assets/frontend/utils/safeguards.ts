@@ -2,6 +2,13 @@
  * Utility functions to safeguard frontend calculations and formatting
  * against null, undefined, NaN, Infinity, and invalid dates from Firestore.
  */
+import {
+  deleteField,
+  doc,
+  updateDoc,
+  type DocumentReference,
+  type Firestore,
+} from "firebase/firestore";
 
 /**
  * Safely parse any value into a finite number.
@@ -92,3 +99,93 @@ export function formatRand(amount: unknown, decimals: number = 2): string {
     maximumFractionDigits: decimals,
   })}`;
 }
+
+/**
+ * If a user's `budget_planner/{uid}` document has legacy `groceries` or
+ * `spentTotals.groceries` saved in Firestore, swaps those values to
+ * `entertainment` and `spentTotals.entertainment` in memory and persists
+ * the migrated fields back to Firestore while deleting the legacy `groceries` fields.
+ */
+export async function migrateBudgetPlannerGroceries<T extends Record<string, any>>(
+  budgetRef: DocumentReference,
+  data: T | null | undefined
+): Promise<T | null> {
+  if (!data) return null;
+
+  const hasTopLevelGroceries = Object.prototype.hasOwnProperty.call(data, "groceries");
+  const hasSpentGroceries =
+    data.spentTotals != null &&
+    typeof data.spentTotals === "object" &&
+    Object.prototype.hasOwnProperty.call(data.spentTotals, "groceries");
+
+  if (!hasTopLevelGroceries && !hasSpentGroceries) {
+    return data;
+  }
+
+  const entertainmentAllocated =
+    data.entertainment !== undefined
+      ? safeNum(data.entertainment) + safeNum(data.groceries)
+      : safeNum(data.groceries);
+
+  const entertainmentSpent =
+    data.spentTotals?.entertainment !== undefined
+      ? safeNum(data.spentTotals?.entertainment) + safeNum(data.spentTotals?.groceries)
+      : safeNum(data.spentTotals?.groceries);
+
+  const migratedSpentTotals = {
+    ...(data.spentTotals || {}),
+    entertainment: entertainmentSpent,
+  };
+  delete migratedSpentTotals.groceries;
+
+  const migrated: Record<string, any> = {
+    ...data,
+    entertainment: entertainmentAllocated,
+    spentTotals: migratedSpentTotals,
+  };
+  delete migrated.groceries;
+
+  try {
+    await updateDoc(budgetRef, {
+      entertainment: entertainmentAllocated,
+      "spentTotals.entertainment": entertainmentSpent,
+      groceries: deleteField(),
+      "spentTotals.groceries": deleteField(),
+    });
+  } catch (e) {
+    console.log("Error migrating groceries in budget_planner: " + e);
+  }
+
+  return migrated as T;
+}
+
+/**
+ * If an expense document has `category` saved as `"groceries"` (case-insensitive),
+ * swaps it to `"entertainment"` in memory and updates the Firestore document to
+ * save `"entertainment"` from now on.
+ */
+export function migrateExpenseCategory<T extends { id?: string; category?: string }>(
+  db: Firestore,
+  expense: T,
+  docId?: string
+): T {
+  const rawCategory = String(expense?.category ?? "").trim().toLowerCase();
+  if (rawCategory !== "groceries") {
+    return expense;
+  }
+
+  const targetId = docId || expense.id;
+  if (targetId) {
+    updateDoc(doc(db, "expenses", targetId), {
+      category: "entertainment",
+    }).catch((e) => {
+      console.log("Error migrating expense category to entertainment: " + e);
+    });
+  }
+
+  return {
+    ...expense,
+    category: "entertainment",
+  };
+}
+

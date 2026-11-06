@@ -4,7 +4,7 @@ import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firesto
 import { getAuth } from 'firebase/auth';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
-import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
+import { safeNum, safePercent, safeDate, formatRand, migrateExpenseCategory, migrateBudgetPlannerGroceries } from '../utils/safeguards';
 
 type Expense = {
   id: string;
@@ -39,13 +39,14 @@ const CATEGORY_KEY_MAP: Record<string, string> = {
   rent:           'Rent',
   dataandairtime: 'Data and airtime',
   data:           'Data and airtime',  // alias
-  groceries:      'Groceries',
+  entertainment:  'Entertainment',
+  groceries:      'Entertainment',     // legacy alias
   education:      'Other',            // alias
   other:          'Other',
 };
 
 /** Preferred display order for the sidebar */
-const CATEGORY_ORDER = ['Rent', 'Food', 'Transport', 'Data and airtime', 'Groceries', 'Other'];
+const CATEGORY_ORDER = ['Rent', 'Food', 'Transport', 'Data and airtime', 'Entertainment', 'Other'];
 
 /** Normalise a raw Firestore category string to a canonical display name. */
 const normaliseCategory = (raw: string): string => {
@@ -95,14 +96,26 @@ const Reports: React.FC = () => {
       setWeeklyLimit(calculatedWeeklyLimit);
 
       // ── 2. All expenses for this user ─────────────────────────────────────
+      const budgetRef = doc(db, 'budget_planner', uid);
+      const budgetSnap = await getDoc(budgetRef);
+      if (budgetSnap.exists()) {
+        await migrateBudgetPlannerGroceries(budgetRef, budgetSnap.data() as Record<string, any>);
+      }
+
       const expensesSnap = await getDocs(
         query(collection(db, 'expenses'), where('userId', '==', uid))
       );
 
-      const expenses: Expense[] = expensesSnap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-      })) as Expense[];
+      const expenses: Expense[] = expensesSnap.docs.map(d =>
+        migrateExpenseCategory(
+          db,
+          {
+            id: d.id,
+            ...d.data(),
+          } as Expense,
+          d.id
+        )
+      );
 
       // All-time total (for summary cards)
       const allTimeTotal = expenses.reduce((sum, e) => sum + safeNum(e.amount), 0);

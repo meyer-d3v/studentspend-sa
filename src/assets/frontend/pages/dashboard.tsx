@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
-import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
+import { safeNum, safePercent, safeDate, formatRand, migrateBudgetPlannerGroceries, migrateExpenseCategory } from '../utils/safeguards';
 
 type Expenses = {
   id: string,
@@ -27,14 +27,14 @@ type BudgetPlanner = {
   food: number,
   rent: number,
   dataAndAirtime: number,
-  groceries: number,
+  entertainment: number,
   other: number,
   spentTotals: {
     transport: number,
     food: number,
     rent: number,
     dataAndAirtime: number,
-    groceries: number,
+    entertainment: number,
     other: number,
   }
 }
@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
     { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
     { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
     { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
-    { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+    { title: 'Entertainment', amount: 0, allocated: 0, spentPercentage: 0 },
     { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
   ];
 
@@ -99,7 +99,8 @@ const Dashboard: React.FC = () => {
       const budgetRef = doc(db, "budget_planner", uid);
       const budgetSnapshot = await getDoc(budgetRef);
 
-      const data = budgetSnapshot.data() as BudgetPlanner | null;
+      const rawData = (budgetSnapshot.data() as BudgetPlanner | undefined) ?? null;
+      const data = await migrateBudgetPlannerGroceries(budgetRef, rawData);
 
       if (!data) {
         // Return empty budget data with safe defaults (0 instead of undefined/NaN)
@@ -107,7 +108,7 @@ const Dashboard: React.FC = () => {
           { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
           { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
           { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
-          { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+          { title: 'Entertainment', amount: 0, allocated: 0, spentPercentage: 0 },
           { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
         ]);
         setLoading(false);
@@ -134,10 +135,10 @@ const Dashboard: React.FC = () => {
           spentPercentage: safePercent(data.spentTotals?.dataAndAirtime, data.dataAndAirtime)
         },
         {
-          title: 'Groceries',
-          amount: safeNum(data.spentTotals?.groceries),
-          allocated: safeNum(data.groceries),
-          spentPercentage: safePercent(data.spentTotals?.groceries, data.groceries)
+          title: 'Entertainment',
+          amount: safeNum(data.spentTotals?.entertainment),
+          allocated: safeNum(data.entertainment),
+          spentPercentage: safePercent(data.spentTotals?.entertainment, data.entertainment)
         },
         {
           title: 'Other',
@@ -157,7 +158,7 @@ const Dashboard: React.FC = () => {
         { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
         { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
         { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
-        { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+        { title: 'Entertainment', amount: 0, allocated: 0, spentPercentage: 0 },
         { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
       ]);
       setLoading(false);
@@ -182,10 +183,9 @@ const Dashboard: React.FC = () => {
 
       const querySnapshot = await getDocs(expensesQuery);
 
-      const recentExpenses = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }))
+      const recentExpenses = querySnapshot.docs.map((docSnap) =>
+        migrateExpenseCategory(db, { id: docSnap.id, ...docSnap.data() } as any, docSnap.id)
+      );
 
       setUserExpenses(recentExpenses as any);
 
@@ -216,10 +216,9 @@ const Dashboard: React.FC = () => {
       const expensesQuery = query(expensesRef, where("userId", "==", uid));
       const expensesSnap = await getDocs(expensesQuery);
 
-      const expenses: Expenses[] = expensesSnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Expenses[];
+      const expenses: Expenses[] = expensesSnap.docs.map((docSnap) =>
+        migrateExpenseCategory(db, { id: docSnap.id, ...docSnap.data() } as Expenses, docSnap.id)
+      );
 
       // Calculate date range for current month
       const now = new Date();
@@ -365,7 +364,11 @@ const Dashboard: React.FC = () => {
                           {safeDate(expense.date || expense.createdAt).toDateString()}
                         </td>
                         <td className={styles.itemName}>{expense.description || expense.item || "Expense"}</td>
-                        <td className={styles.itemCategory}>{expense.category || "Other"}</td>
+                        <td className={styles.itemCategory}>
+                          {expense.category
+                            ? expense.category.charAt(0).toUpperCase() + expense.category.slice(1)
+                            : "Other"}
+                        </td>
                         <td className={styles.itemAmount}>{formatRand(expense.amount)}</td>
                       </tr>
                     ))}

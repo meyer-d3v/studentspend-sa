@@ -6,7 +6,7 @@ import { getDocs, query, where, collection, deleteDoc, doc } from 'firebase/fire
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { Trash2 } from 'lucide-react';
-import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
+import { safeNum, safePercent, safeDate, formatRand, migrateExpenseCategory } from '../utils/safeguards';
 
 type Expense = {
   id: string;
@@ -29,7 +29,7 @@ const CATEGORY_OPTIONS = [
   'Transport',
   'Rent',
   'Data and airtime',
-  'Groceries',
+  'Entertainment',
   'Other',
 ];
 
@@ -61,7 +61,8 @@ const normaliseCategory = (raw: string): string => {
     rent:           'Rent',
     dataandairtime: 'Data and airtime',
     data:           'Data and airtime',
-    groceries:      'Groceries',
+    entertainment:  'Entertainment',
+    groceries:      'Entertainment',
     education:      'Other',
     other:          'Other',
   };
@@ -104,7 +105,7 @@ const Expenses: React.FC = () => {
       transport:      { label: 'Transport',        amount: 0 },
       rent:           { label: 'Rent',             amount: 0 },
       dataandairtime: { label: 'Data and airtime', amount: 0 },
-      groceries:      { label: 'Groceries',        amount: 0 },
+      entertainment:  { label: 'Entertainment',    amount: 0 },
       other:          { label: 'Other',            amount: 0 },
     };
 
@@ -113,6 +114,7 @@ const Expenses: React.FC = () => {
       const raw = (expense.category ?? 'other').toLowerCase().replace(/\s+/g, '');
       const key =
         raw === 'data' || raw === 'data&airtime' ? 'dataandairtime'
+        : raw === 'groceries'                    ? 'entertainment'
         : raw === 'education'                    ? 'other'
         : categoryMap[raw] !== undefined         ? raw
         : 'other';
@@ -143,7 +145,9 @@ const Expenses: React.FC = () => {
         return;
       }
 
-      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Expense[];
+      const data = snapshot.docs.map((d) =>
+        migrateExpenseCategory(db, { id: d.id, ...d.data() } as Expense, d.id)
+      );
 
       data.sort((a, b) => {
         const dateA = safeDate(a.date || (a as any).createdAt);

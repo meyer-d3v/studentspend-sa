@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styles from "../styles/BudgetPlanner.module.css";
 import { getAuth } from 'firebase/auth';
-import { getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { getDoc, doc, setDoc, updateDoc, deleteField } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { LoaderCircle } from 'lucide-react';
-import { safeNum, safePercent } from '../utils/safeguards';
+import { safeNum, safePercent, migrateBudgetPlannerGroceries } from '../utils/safeguards';
 
-type CategoryKey = "transport" | "food" | "rent" | "dataAndAirtime" | "groceries" | "other";
+type CategoryKey = "transport" | "food" | "rent" | "dataAndAirtime" | "entertainment" | "other";
 
 const CATEGORIES: { key: CategoryKey; name: string }[] = [
   { key: "transport", name: "Transport" },
   { key: "food", name: "Food" },
   { key: "rent", name: "Rent" },
   { key: "dataAndAirtime", name: "Data and airtime" },
-  { key: "groceries", name: "Groceries" },
+  { key: "entertainment", name: "Entertainment" },
   { key: "other", name: "Other" },
 ];
 
@@ -28,7 +28,7 @@ const BudgetPlanner: React.FC = () => {
       food: 0,
       rent: 0,
       dataAndAirtime: 0,
-      groceries: 0,
+      entertainment: 0,
       other: 0,
     },
   });
@@ -53,7 +53,7 @@ const BudgetPlanner: React.FC = () => {
             food: 0,
             rent: 0,
             dataAndAirtime: 0,
-            groceries: 0,
+            entertainment: 0,
             other: 0,
           },
         });
@@ -77,17 +77,18 @@ const BudgetPlanner: React.FC = () => {
         safeNum(userDoc?.limits?.monthlyLimit) ||
         0;
 
-      // 2. Fetch category budget allocations
+      // 2. Fetch category budget allocations (and migrate legacy groceries -> entertainment)
       const budgetRef = doc(db, "budget_planner", uid);
       const budgetSnap = await getDoc(budgetRef);
-      const budgetData = budgetSnap.exists() ? budgetSnap.data() : null;
+      const rawBudgetData = budgetSnap.exists() ? budgetSnap.data() : null;
+      const budgetData = await migrateBudgetPlannerGroceries(budgetRef, rawBudgetData);
 
       const allocations = {
         transport: safeNum(budgetData?.transport),
         food: safeNum(budgetData?.food),
         rent: safeNum(budgetData?.rent),
         dataAndAirtime: safeNum(budgetData?.dataAndAirtime),
-        groceries: safeNum(budgetData?.groceries),
+        entertainment: safeNum(budgetData?.entertainment),
         other: safeNum(budgetData?.other),
       };
 
@@ -101,7 +102,7 @@ const BudgetPlanner: React.FC = () => {
         allocations.food +
         allocations.rent +
         allocations.dataAndAirtime +
-        allocations.groceries +
+        allocations.entertainment +
         allocations.other;
 
       if (monthlyLimit === 0 && totalAllocated > 0) {
@@ -129,7 +130,7 @@ const BudgetPlanner: React.FC = () => {
           food: 0,
           rent: 0,
           dataAndAirtime: 0,
-          groceries: 0,
+          entertainment: 0,
           other: 0,
         },
       });
@@ -157,8 +158,10 @@ const BudgetPlanner: React.FC = () => {
           food: userData.catagoryAllocations.food || 0,
           rent: userData.catagoryAllocations.rent || 0,
           dataAndAirtime: userData.catagoryAllocations.dataAndAirtime || 0,
-          groceries: userData.catagoryAllocations.groceries || 0,
+          entertainment: userData.catagoryAllocations.entertainment || 0,
           other: userData.catagoryAllocations.other || 0,
+          groceries: deleteField(),
+          "spentTotals.groceries": deleteField(),
         },
         { merge: true }
       );
@@ -194,7 +197,7 @@ const BudgetPlanner: React.FC = () => {
     userData.catagoryAllocations.food +
     userData.catagoryAllocations.rent +
     userData.catagoryAllocations.dataAndAirtime +
-    userData.catagoryAllocations.groceries +
+    userData.catagoryAllocations.entertainment +
     userData.catagoryAllocations.other;
 
   const remainingToAllocate = userData.monthlyLimit - totalAllocated;

@@ -13,7 +13,7 @@ const RECOMMENDED_SPLIT = {
     food: 0.26,
     transport: 0.17,
     dataAndAirtime: 0.12,
-    groceries: 0.00, // Left at 0 to keep the math balanced with the previous report
+    entertainment: 0.00, // Left at 0 to keep the math balanced with the previous report
     other: 0.11
 };
 
@@ -39,7 +39,7 @@ const Budget: React.FC = () => {
         food: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.food),
         rent: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.rent),
         dataAndAirtime: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.dataAndAirtime),
-        groceries: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.groceries),
+        entertainment: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.entertainment),
         other: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.other),
     };
     const totalAllocated = Object.values(recommendedAllocations).reduce((sum, val) => sum + val, 0);
@@ -50,7 +50,7 @@ const Budget: React.FC = () => {
         { name: 'Food', amount: formatRand(recommendedAllocations.food, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.food * 100) : 0 },
         { name: 'Rent', amount: formatRand(recommendedAllocations.rent, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.rent * 100) : 0 },
         { name: 'Data and airtime', amount: formatRand(recommendedAllocations.dataAndAirtime, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.dataAndAirtime * 100) : 0 },
-        { name: 'Groceries', amount: formatRand(recommendedAllocations.groceries, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.groceries * 100) : 0 },
+        { name: 'Entertainment', amount: formatRand(recommendedAllocations.entertainment, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.entertainment * 100) : 0 },
         { name: 'Other', amount: formatRand(recommendedAllocations.other, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.other * 100) : 0 },
     ];
 
@@ -85,14 +85,14 @@ const Budget: React.FC = () => {
                 food: Math.round(mLimit * RECOMMENDED_SPLIT.food),
                 rent: Math.round(mLimit * RECOMMENDED_SPLIT.rent),
                 dataAndAirtime: Math.round(mLimit * RECOMMENDED_SPLIT.dataAndAirtime),
-                groceries: Math.round(mLimit * RECOMMENDED_SPLIT.groceries),
+                entertainment: Math.round(mLimit * RECOMMENDED_SPLIT.entertainment),
                 other: Math.round(mLimit * RECOMMENDED_SPLIT.other),
                 spentTotals: {
                     transport: 0,
                     food: 0,
                     rent: 0,
                     dataAndAirtime: 0,
-                    groceries: 0,
+                    entertainment: 0,
                     other: 0,
                 }
             }, { merge: true });
