@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-#Environmental Variables
+# Environmental Variables
 .env
+
+# Setup README.md file for marking
+Setup.md
