@@ -48,18 +48,16 @@ const RegisterSidebar: React.FC<SidebarProps> = () => {
 
   }
   
-  const completedStep = () => {
-
-    return <>
-    
+  const completedStep = (label: string) => {
+    return (
       <div className={`${styles.stepItem} ${styles.completedStep}`}>
         <div className={styles.stepIndicator}>
           <Check size={16} strokeWidth={3} />
         </div>
-        <span className={styles.stepLabel}>Account</span>
+        <span className={styles.stepLabel}>{label}</span>
       </div>
-    </>
-  }
+    );
+  };
 
   useEffect(() => {
 
@@ -79,7 +77,7 @@ const RegisterSidebar: React.FC<SidebarProps> = () => {
       <nav className={styles.stepperNav}>
 
         {currentPageIndex >= 2  ? (
-          completedStep()
+          completedStep("Account")
         )
         :
         (
@@ -90,7 +88,7 @@ const RegisterSidebar: React.FC<SidebarProps> = () => {
         )}
         
         {currentPageIndex >= 3 ? (
-          completedStep()
+          completedStep("Your details")
         )
         :
         (
@@ -101,7 +99,7 @@ const RegisterSidebar: React.FC<SidebarProps> = () => {
         )}
         
         {currentPageIndex >= 4 ? (
-          completedStep()
+          completedStep("Verification")
         )
         :
         (
@@ -112,7 +110,7 @@ const RegisterSidebar: React.FC<SidebarProps> = () => {
         )}
         
         {currentPageIndex >= 5 ? (
-          completedStep()
+          completedStep("Income")
         )
         :
         (

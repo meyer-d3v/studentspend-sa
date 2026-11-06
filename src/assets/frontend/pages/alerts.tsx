@@ -4,6 +4,7 @@ import { collection, getDocs, query, where, type Timestamp, orderBy, getDoc, doc
 import { getAuth } from 'firebase/auth';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
+import { safeNum, safeDate } from '../utils/safeguards';
 
 type Alerts = {
   id: string,
@@ -81,8 +82,12 @@ const Alerts: React.FC = () => {
     try {
 
       const uid = getAuth().currentUser?.uid;
+      if (!uid) {
+        setUserAlerts([]);
+        return;
+      }
       const ref = collection(db, "alerts");
-      const alertsQuery = query(ref, 
+      const alertsQuery = query(ref,
         where("userId", "==", uid),
         orderBy("createdAt", "desc"),
       )
@@ -94,12 +99,13 @@ const Alerts: React.FC = () => {
         ...doc.data()
       }));
 
-      setUserAlerts(data as any || []);
+      setUserAlerts((data as any) || []);
 
 
     } catch (e) {
 
       console.log("Error occured while trying fetch user alerts. Error: " + e);
+      setUserAlerts([]);
 
     }
 
@@ -115,13 +121,15 @@ const Alerts: React.FC = () => {
       const snapshot = await getDoc(ref);
 
       const data = snapshot.data();
-
-      setWarningLevel((data as any)?.warningLevel as number || 80)
+      const rawLevel = (data as any)?.warningLevel;
+      const parsedLevel = safeNum(rawLevel, 80);
+      setWarningLevel(Math.min(Math.max(parsedLevel, 0), 100));
 
 
     } catch (e) {
 
       console.log("Error occured while trying fetch user warning level. Error: " + e);
+      setWarningLevel(80);
 
     }
 
@@ -180,7 +188,7 @@ const Alerts: React.FC = () => {
                     <span className={`${styles.statusDot} ${styles[alert.status]}`}></span>
                     <h3 className={styles.alertTitle}>{alert.title}</h3>
                   </div>
-                  <span className={styles.alertTime}>{alert.createdAt?.toDate ? alert.createdAt.toDate().toLocaleDateString() : ''}</span>
+                  <span className={styles.alertTime}>{alert.createdAt ? safeDate(alert.createdAt).toLocaleDateString() : ''}</span>
                 </div>
                 <p className={styles.alertDescription}>{alert.description}</p>
               </div>

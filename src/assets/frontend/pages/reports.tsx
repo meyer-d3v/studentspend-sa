@@ -4,6 +4,7 @@ import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firesto
 import { getAuth } from 'firebase/auth';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
+import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
 
 type Expense = {
   id: string;
@@ -67,14 +68,27 @@ const Reports: React.FC = () => {
       setLoading(true);
 
       const uid = getAuth().currentUser?.uid;
-      if (!uid) return;
+      if (!uid) {
+        // Set safe defaults when no user
+        setTotalIncome(0);
+        setTotalSpent(0);
+        setNetBalance(0);
+        setWeeklySpending([]);
+        setCategoryBreakdown([]);
+        setWeeklyLimit(0);
+        setDateRange({ from: '', to: '' });
+        return;
+      }
 
       // ── 1. User income & budget settings ──────────────────────────────────
       const userSnap = await getDoc(doc(db, 'users', uid));
-      const userData = userSnap.data();
+      const userData = userSnap.exists() ? userSnap.data() : null;
 
-      const monthlyIncome        = userData?.income?.totalIncome  || 0;
-      const monthlyLimit         = userData?.limit?.monthlyLimit  || 0;
+      const incomeObj = userData?.income;
+      const calculatedIncome = safeNum(incomeObj?.nsfasAllowance) + safeNum(incomeObj?.partTimeWork) + safeNum(incomeObj?.familySupport);
+      const monthlyIncome = safeNum(incomeObj?.totalIncome, calculatedIncome);
+
+      const monthlyLimit = safeNum(userData?.limit?.monthlyLimit || userData?.limits?.monthlyLimit);
       const calculatedWeeklyLimit = monthlyLimit > 0 ? monthlyLimit / 4 : 0;
 
       setTotalIncome(monthlyIncome);
@@ -91,14 +105,14 @@ const Reports: React.FC = () => {
       })) as Expense[];
 
       // All-time total (for summary cards)
-      const allTimeTotal = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const allTimeTotal = expenses.reduce((sum, e) => sum + safeNum(e.amount), 0);
       setTotalSpent(allTimeTotal);
       setNetBalance(monthlyIncome - allTimeTotal);
 
       // ── 3. Current-month date range ────────────────────────────────────────
       const now        = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
       setDateRange({
         from: monthStart.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -107,12 +121,12 @@ const Reports: React.FC = () => {
 
       // ── 4. Filter to current month ─────────────────────────────────────────
       const currentMonthExpenses = expenses.filter(e => {
-        const d = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+        const d = safeDate(e.date || (e as any).createdAt);
         return d >= monthStart && d <= monthEnd;
       });
 
       const currentMonthTotal = currentMonthExpenses.reduce(
-        (sum, e) => sum + (e.amount || 0), 0
+        (sum, e) => sum + safeNum(e.amount), 0
       );
 
       // ── 5. Weekly spending bars ────────────────────────────────────────────
@@ -121,14 +135,14 @@ const Reports: React.FC = () => {
         weekStart.setDate(monthStart.getDate() + index * 7);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
-        weekEnd.setHours(23, 59, 59);
+        weekEnd.setHours(23, 59, 59, 999);
 
         const weekTotal = currentMonthExpenses
           .filter(e => {
-            const d = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+            const d = safeDate(e.date || (e as any).createdAt);
             return d >= weekStart && d <= weekEnd;
           })
-          .reduce((sum, e) => sum + (e.amount || 0), 0);
+          .reduce((sum, e) => sum + safeNum(e.amount), 0);
 
         return {
           week:        weekLabel,
@@ -146,25 +160,34 @@ const Reports: React.FC = () => {
 
       currentMonthExpenses.forEach(e => {
         const label = normaliseCategory(e.category ?? '');
-        categoryTotals[label] = (categoryTotals[label] || 0) + (e.amount || 0);
+        categoryTotals[label] = (categoryTotals[label] || 0) + safeNum(e.amount);
       });
 
       // Build ordered list; use currentMonthTotal as the denominator so
       // percentages always add up to 100 % for the displayed month.
       const breakdown: CategoryBreakdown[] = CATEGORY_ORDER
-        .map(name => ({
-          name,
-          amount:     categoryTotals[name] || 0,
-          percentage: currentMonthTotal > 0
-            ? ((categoryTotals[name] || 0) / currentMonthTotal) * 100
-            : 0,
-        }))
+        .map(name => {
+          const amount = categoryTotals[name] || 0;
+          const safePct = safePercent(amount, currentMonthTotal);
+          return {
+            name,
+            amount,
+            percentage: safePct,
+          };
+        })
         .filter(cat => cat.amount > 0); // Only show categories with actual spend
 
       setCategoryBreakdown(breakdown);
 
     } catch (e) {
       console.log('Error fetching report data: ' + e);
+      // On error, set safe defaults
+      setTotalIncome(0);
+      setTotalSpent(0);
+      setNetBalance(0);
+      setWeeklySpending([]);
+      setCategoryBreakdown([]);
+      setWeeklyLimit(0);
     } finally {
       setLoading(false);
     }
@@ -174,15 +197,13 @@ const Reports: React.FC = () => {
     fetchReportData();
   }, []);
 
-  const formatCurrency = (amount: number) =>
-    `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatCurrency = (amount: number) => formatRand(amount, 2);
 
-  const formatCurrencyShort = (amount: number) =>
-    `R ${Math.round(amount).toLocaleString('en-ZA')}`;
+  const formatCurrencyShort = (amount: number) => formatRand(amount, 0);
 
   // Chart scaling: tallest bar OR the weekly limit line, whichever is higher
   const maxWeeklyAmount = weeklySpending.length > 0
-    ? Math.max(...weeklySpending.map(w => w.amount), weeklyLimit || 1)
+    ? Math.max(...weeklySpending.map(w => safeNum(w.amount)), safeNum(weeklyLimit, 1))
     : 1;
 
   return (

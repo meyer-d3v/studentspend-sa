@@ -6,6 +6,7 @@ import { updateDoc, doc } from 'firebase/firestore';
 import styles from "../../styles/RegisterWorkflowStyles/Income.module.css";
 import { LoaderCircle } from 'lucide-react';
 import { getAuth } from 'firebase/auth';
+import { safeNum } from '../../utils/safeguards';
 
 const Income: React.FC = () => {
 
@@ -29,16 +30,18 @@ const Income: React.FC = () => {
 
             setLoading(true);
 
+            const total = safeNum(userData.nsfasAllowance) + safeNum(userData.partTimeWork) + safeNum(userData.familySupport);
+
             if (uid) {
 
                 const ref = doc(db, "users", uid);
 
                 await updateDoc(ref, {
                     income: {
-                        nsfasAllowance: userData.nsfasAllowance,
-                        partTimeWork: userData.partTimeWork,
-                        familySupport: userData.familySupport,
-                        totalIncome: (userData.nsfasAllowance + userData.partTimeWork + userData.familySupport)
+                        nsfasAllowance: safeNum(userData.nsfasAllowance),
+                        partTimeWork: safeNum(userData.partTimeWork),
+                        familySupport: safeNum(userData.familySupport),
+                        totalIncome: total
                     },
                 });
 
@@ -46,7 +49,7 @@ const Income: React.FC = () => {
 
             const criticalData = { 
                 uid: uid,
-                monthlyIncome: (userData.nsfasAllowance + userData.partTimeWork + userData.familySupport)
+                monthlyIncome: total
             };
 
             navigate("/budget", { state: criticalData });
@@ -113,7 +116,7 @@ const Income: React.FC = () => {
                             value={userData.nsfasAllowance || ""}
                             onChange={(e) => setUserData((prev) => ({
                                 ...prev,
-                                nsfasAllowance: e.target.valueAsNumber || 0
+                                nsfasAllowance: safeNum(e.target.valueAsNumber, 0)
                             }))}
                             placeholder="0" 
                         />
@@ -134,7 +137,7 @@ const Income: React.FC = () => {
                                 value={userData.partTimeWork || ""}
                                 onChange={(e) => setUserData((prev) => ({
                                     ...prev,
-                                    partTimeWork: e.target.valueAsNumber || 0
+                                    partTimeWork: safeNum(e.target.valueAsNumber, 0)
                                 }))}
                                 placeholder="0" 
                             />
@@ -153,18 +156,10 @@ const Income: React.FC = () => {
                                 type="number" 
                                 className={styles.amountInput} 
                                 value={userData.familySupport  || ""}
-                                onChange={(e) => {
-
-                                    console.log(e.target.valueAsNumber)
-                                    console.log(typeof e.target.valueAsNumber)
-                                    
-                                    setUserData((prev) => ({
-                                        ...prev,
-                                        familySupport: e.target.valueAsNumber || 0
-                                    }))
-
-                                    console.log(userData.familySupport)
-                                }}
+                                onChange={(e) => setUserData((prev) => ({
+                                    ...prev,
+                                    familySupport: safeNum(e.target.valueAsNumber, 0)
+                                }))}
                                 placeholder="0" 
                             />
                         </div>
@@ -175,7 +170,7 @@ const Income: React.FC = () => {
                 {/* Total Summary Box */}
                 <div className={styles.totalBox}>
                     <span className={styles.totalLabel}>Total monthly income</span>
-                    <span className={styles.totalAmount}>R {userData.nsfasAllowance + userData.partTimeWork + userData.familySupport}</span>
+                    <span className={styles.totalAmount}>R {safeNum(userData.nsfasAllowance) + safeNum(userData.partTimeWork) + safeNum(userData.familySupport)}</span>
                 </div>
 
                 {error && (

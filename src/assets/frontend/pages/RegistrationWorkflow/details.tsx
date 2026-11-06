@@ -18,7 +18,7 @@ const Details: React.FC = () => {
     });
 
     const location = useLocation();
-    const uid = location.state.uid ;
+    const uid = location.state?.uid || auth.currentUser?.uid || "";
 
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -35,6 +35,8 @@ const Details: React.FC = () => {
             await updateDoc(ref, {
                 firstName: userData.firstName,
                 lastName: userData.lastName,
+                firstname: userData.firstName,
+                lastname: userData.lastName,
                 institution: userData.institution,
                 yearOfStudy: userData.yearOfStudy,
                 cityCampus: userData.cityCampus,

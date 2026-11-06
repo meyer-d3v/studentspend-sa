@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 // @ts-ignore: No declaration file for module '../../backend/firebaseConfig/config'
 import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Budget.module.css";
-import { updateDoc, doc, getDoc } from 'firebase/firestore';
+import { updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
+import { safeNum } from '../../utils/safeguards';
 
 
 const Budget: React.FC = () => {
@@ -39,19 +40,47 @@ const Budget: React.FC = () => {
         
             setLoading(true);
 
+            const mLimit = safeNum(userIncomeData.monthlyLimit);
+            const wLimit = safeNum(userIncomeData.weeklyLimit);
+
             const ref = doc(db, "users", userData.uid);
 
             await updateDoc(ref, {
+                limit: {
+                    monthlyLimit: mLimit,
+                    weeklyLimit: wLimit,
+                },
                 limits: {
-                    monthlyLimit: userIncomeData.monthlyLimit,
-                    weeklyLimit: userIncomeData.weeklyLimit,
+                    monthlyLimit: mLimit,
+                    weeklyLimit: wLimit,
                 }
             });
 
+            // Initialize default budget_planner document so user can immediately record expenses
+            const budgetRef = doc(db, "budget_planner", userData.uid);
+            await setDoc(budgetRef, {
+                monthlyLimit: mLimit,
+                weeklyLimit: wLimit,
+                transport: 0,
+                food: 0,
+                rent: 0,
+                dataAndAirtime: 0,
+                groceries: 0,
+                other: 0,
+                spentTotals: {
+                    transport: 0,
+                    food: 0,
+                    rent: 0,
+                    dataAndAirtime: 0,
+                    groceries: 0,
+                    other: 0,
+                }
+            }, { merge: true });
+
             const criticalData = { 
-                monthlyIncome: userIncomeData.monthlyIncome,
-                monthlyLimit: userIncomeData.monthlyLimit,
-                weeklyLimit: userIncomeData.weeklyLimit,
+                monthlyIncome: safeNum(userIncomeData.monthlyIncome),
+                monthlyLimit: mLimit,
+                weeklyLimit: wLimit,
             };
 
             navigate("/finish", { state: criticalData });
@@ -128,11 +157,14 @@ const Budget: React.FC = () => {
                         <input 
                             type="number" 
                             className={styles.amountInput} 
-                            onChange={(e) => setUserIncomeData((prev) => ({
-                                ...prev,
-                                monthlyLimit: e.target.valueAsNumber,
-                                weeklyLimit: e.target.valueAsNumber / 4,
-                            }))}
+                            onChange={(e) => {
+                                const val = safeNum(e.target.valueAsNumber, 0);
+                                setUserIncomeData((prev) => ({
+                                    ...prev,
+                                    monthlyLimit: val,
+                                    weeklyLimit: val / 4,
+                                }));
+                            }}
                             placeholder="0"
                             max={userIncomeData.monthlyIncome} 
                         />

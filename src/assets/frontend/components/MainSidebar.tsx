@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, query, where } from "firebase/firesto
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { getAuth } from "firebase/auth";
+import { safeNum, safePercent, safeDate } from "../utils/safeguards";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -52,24 +53,13 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         return;
       }
 
-      const userData = userSnapshot.data() as {
-        firstName?: string;
-        income?: {
-          totalIncome?: number;
-          nsfasAllowance?: number;
-          partTimeWork?: number;
-          familySupport?: number;
-        };
-      };
+      const userData = userSnapshot.data() as any;
 
-      const incomeObj = userData.income;
-      const totalIncome =
-        incomeObj?.totalIncome ??
-        ((incomeObj?.nsfasAllowance || 0) +
-          (incomeObj?.partTimeWork || 0) +
-          (incomeObj?.familySupport || 0));
+      const incomeObj = userData?.income;
+      const calculatedIncome = safeNum(incomeObj?.nsfasAllowance) + safeNum(incomeObj?.partTimeWork) + safeNum(incomeObj?.familySupport);
+      const totalIncome = safeNum(incomeObj?.totalIncome, calculatedIncome);
 
-      const firstName = userData.firstName?.trim() || "";
+      const firstName = (userData?.firstName || userData?.firstname || "").trim();
 
       // 2. Fetch all expenses for this user to calculate current month total
       const expensesRef = collection(db, "expenses");
@@ -84,29 +74,19 @@ const MainSidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
       expensesSnapshot.docs.forEach((docSnap) => {
         const exp = docSnap.data();
-        const rawDate = exp.date;
-        let expenseDate: Date;
-
-        if (rawDate?.toDate && typeof rawDate.toDate === "function") {
-          expenseDate = rawDate.toDate();
-        } else if (rawDate) {
-          expenseDate = new Date(rawDate);
-        } else {
-          expenseDate = new Date();
-        }
+        const expenseDate = safeDate(exp.date || exp.createdAt);
 
         if (
-          !isNaN(expenseDate.getTime()) &&
           expenseDate.getFullYear() === currentYear &&
           expenseDate.getMonth() === currentMonth
         ) {
-          currentMonthSpent += Number(exp.amount) || 0;
+          currentMonthSpent += safeNum(exp.amount, 0);
         }
       });
 
       // 3. Calculate balance left and spent percentage
       const balanceLeft = totalIncome - currentMonthSpent;
-      const spentPercentage = totalIncome > 0 ? (currentMonthSpent / totalIncome) * 100 : 0;
+      const spentPercentage = safePercent(currentMonthSpent, totalIncome);
 
       setUserDetails({
         firstname: firstName,

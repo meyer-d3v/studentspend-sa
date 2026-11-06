@@ -5,6 +5,7 @@ import { getAuth } from 'firebase/auth';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
 
 type Expenses = {
   id: string,
@@ -98,47 +99,68 @@ const Dashboard: React.FC = () => {
       const budgetRef = doc(db, "budget_planner", uid);
       const budgetSnapshot = await getDoc(budgetRef);
 
-      const data = budgetSnapshot.data() as BudgetPlanner || null;
+      const data = budgetSnapshot.data() as BudgetPlanner | null;
 
-      if (!data) return;
-
+      if (!data) {
+        // Return empty budget data with safe defaults (0 instead of undefined/NaN)
+        setUserBudget([
+          { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
+          { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
+          { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
+          { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+          { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
+        ]);
+        setLoading(false);
+        return;
+      }
 
       setUserBudget([
-        { 
-          title: 'Food', 
-          amount: data.spentTotals?.food, 
-          allocated: data.food, 
-          spentPercentage: (data.spentTotals.food / data.food) * 100 
+        {
+          title: 'Food',
+          amount: safeNum(data.spentTotals?.food),
+          allocated: safeNum(data.food),
+          spentPercentage: safePercent(data.spentTotals?.food, data.food)
         },
-        { 
-          title: 'Transport', 
-          amount: data.spentTotals.transport, 
-          allocated: data.transport, 
-          spentPercentage: (data.spentTotals.transport / data.transport) * 100 },
-        { 
-          title: 'Data and airtime', 
-          amount: data.spentTotals.dataAndAirtime, 
-          allocated: data.dataAndAirtime, 
-          spentPercentage: (data.spentTotals.dataAndAirtime / data.dataAndAirtime) * 100 },
-        { 
-          title: 'Groceries', 
-          amount: data.spentTotals.groceries, 
-          allocated: data.groceries, 
-          spentPercentage: (data.spentTotals.groceries / data.groceries) * 100 
+        {
+          title: 'Transport',
+          amount: safeNum(data.spentTotals?.transport),
+          allocated: safeNum(data.transport),
+          spentPercentage: safePercent(data.spentTotals?.transport, data.transport)
         },
-        { 
-          title: 'Other', 
-          amount: data.spentTotals.other, 
-          allocated: data.other, 
-          spentPercentage: (data.spentTotals.other / data.other) * 100 
+        {
+          title: 'Data and airtime',
+          amount: safeNum(data.spentTotals?.dataAndAirtime),
+          allocated: safeNum(data.dataAndAirtime),
+          spentPercentage: safePercent(data.spentTotals?.dataAndAirtime, data.dataAndAirtime)
         },
-      ])
+        {
+          title: 'Groceries',
+          amount: safeNum(data.spentTotals?.groceries),
+          allocated: safeNum(data.groceries),
+          spentPercentage: safePercent(data.spentTotals?.groceries, data.groceries)
+        },
+        {
+          title: 'Other',
+          amount: safeNum(data.spentTotals?.other),
+          allocated: safeNum(data.other),
+          spentPercentage: safePercent(data.spentTotals?.other, data.other)
+        },
+      ]);
 
       setLoading(false);
 
     } catch (e) {
 
       console.log("Error occured: " + e);
+      // On error, set safe defaults
+      setUserBudget([
+        { title: 'Food', amount: 0, allocated: 0, spentPercentage: 0 },
+        { title: 'Transport', amount: 0, allocated: 0, spentPercentage: 0 },
+        { title: 'Data and airtime', amount: 0, allocated: 0, spentPercentage: 0 },
+        { title: 'Groceries', amount: 0, allocated: 0, spentPercentage: 0 },
+        { title: 'Other', amount: 0, allocated: 0, spentPercentage: 0 },
+      ]);
+      setLoading(false);
 
     }
 
@@ -185,7 +207,7 @@ const Dashboard: React.FC = () => {
       const userRef = doc(db, "users", uid);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.data();
-      const monthlyLimit = userData?.limit?.monthlyLimit || 0;
+      const monthlyLimit = safeNum(userData?.limit?.monthlyLimit || userData?.limits?.monthlyLimit, 0);
       const calculatedWeeklyLimit = monthlyLimit > 0 ? monthlyLimit / 4 : 0;
       setWeeklyLimit(calculatedWeeklyLimit);
 
@@ -202,11 +224,11 @@ const Dashboard: React.FC = () => {
       // Calculate date range for current month
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
       // Filter expenses for current month
       const currentMonthExpenses = expenses.filter(e => {
-        const expenseDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+        const expenseDate = safeDate(e.date || (e as any).createdAt);
         return expenseDate >= monthStart && expenseDate <= monthEnd;
       });
 
@@ -216,13 +238,14 @@ const Dashboard: React.FC = () => {
         weekStart.setDate(monthStart.getDate() + index * 7);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
 
         const weekExpenses = currentMonthExpenses.filter(e => {
-          const expenseDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+          const expenseDate = safeDate(e.date || (e as any).createdAt);
           return expenseDate >= weekStart && expenseDate <= weekEnd;
         });
 
-        const weekTotal = weekExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const weekTotal = weekExpenses.reduce((sum, e) => sum + safeNum(e.amount, 0), 0);
 
         return {
           week: weekLabel,
@@ -286,14 +309,14 @@ const Dashboard: React.FC = () => {
               {userBudget.map((data, index) => (
                 <div key={index} className={styles.budgetCard}>
                   <div className={styles.cardHeader}>{data.title}</div>
-                  <div className={styles.cardAmount}>R {data.amount !== undefined ? data.amount : "0"}</div>
+                  <div className={styles.cardAmount}>{formatRand(data.amount, 0)}</div>
                   <div className={styles.progressBar}>
                     <div
                       className={styles.progressFill}
-                      style={{ width: `${data.spentPercentage}%` }}
+                      style={{ width: `${safePercent(data.amount, data.allocated)}%` }}
                     ></div>
                   </div>
-                  <div className={styles.cardAllocation}>of R {data.allocated} allocated</div>
+                  <div className={styles.cardAllocation}>of {formatRand(data.allocated, 0)} allocated</div>
                 </div>
               ))}
             </>
@@ -339,15 +362,11 @@ const Dashboard: React.FC = () => {
                     {userExpenses.map((expense: any) => (
                       <tr key={expense.id} className={styles.tableDataRow}>
                         <td>
-                          {
-                            expense.date?.toDate 
-                              ? expense.date.toDate().toDateString() 
-                              : new Date(expense.date).toDateString()
-                          }
+                          {safeDate(expense.date || expense.createdAt).toDateString()}
                         </td>
-                        <td className={styles.itemName}>{expense.description}</td>
-                        <td className={styles.itemCategory}>{expense.category}</td>
-                        <td className={styles.itemAmount}>R {expense.amount}</td>
+                        <td className={styles.itemName}>{expense.description || expense.item || "Expense"}</td>
+                        <td className={styles.itemCategory}>{expense.category || "Other"}</td>
+                        <td className={styles.itemAmount}>{formatRand(expense.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -371,17 +390,17 @@ const Dashboard: React.FC = () => {
                 {weeklySpending.length > 0 ? (
                   <>
                     {weeklySpending.map((week, index) => {
-                      const maxAmount = Math.max(...weeklySpending.map(w => w.amount), weeklyLimit || 1);
-                      const heightPercent = maxAmount > 0 ? (week.amount / maxAmount) * 100 : 0;
+                      const maxAmount = Math.max(...weeklySpending.map(w => safeNum(w.amount)), safeNum(weeklyLimit, 1));
+                      const heightPercent = maxAmount > 0 ? safePercent(week.amount, maxAmount) : 0;
                       return (
                         <div key={index} className={styles.weekBarGroup}>
                           <span className={styles.weekBarAmount}>
-                            {week.amount > 0 ? `R ${week.amount.toLocaleString('en-ZA', {minimumFractionDigits: 0, maximumFractionDigits: 0})}` : 'R 0'}
+                            {week.amount > 0 ? formatRand(week.amount, 0) : 'R 0'}
                           </span>
                           <div
                             className={`${styles.weekBar} ${week.isOverLimit ? styles.weekBarAmber : styles.weekBarBlue}`}
                             style={{ height: `${Math.max(heightPercent, 5)}%` }}
-                            title={`${week.week}: R ${week.amount.toLocaleString('en-ZA')}${week.isOverLimit ? ' (over limit)' : ''}`}
+                            title={`${week.week}: ${formatRand(week.amount)}${week.isOverLimit ? ' (over limit)' : ''}`}
                           ></div>
                           <span className={styles.weekBarLabel}>{week.week}</span>
                         </div>

@@ -40,12 +40,13 @@ const Header: React.FC = () => {
         const ref = doc(db, "users", uid);
         const snapshot = await getDoc(ref);
   
-        const data = snapshot.data() as { firstName: string, lastName: string };
-  
-        setUserData({
-          firstname: data.firstName,
-          lastname: data.lastName,
-        })
+        if (snapshot.exists()) {
+          const data = snapshot.data() as any;
+          setUserData({
+            firstname: data?.firstName || data?.firstname || "",
+            lastname: data?.lastName || data?.lastname || "",
+          });
+        }
   
       } catch (e) {
   

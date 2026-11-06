@@ -26,8 +26,8 @@ export const useContext = () => {
         if (userSnap.exists()) {
           const userData = userSnap.data();
           setUser({ id: userSnap.id, ...userData });
-          setRole(userData.role);
-          console.log("User role:", userData.role);
+          setRole(userData?.role || "default");
+          console.log("User role:", userData?.role || "default");
         } else {
           console.log("No user found for ID:", currentUser.uid);
           setUser(null);

@@ -5,6 +5,7 @@ import { db, auth } from '../../../backend/firebaseConfig/config';
 import styles from "../../styles/RegisterWorkflowStyles/Finish.module.css";
 import { getDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { safeNum, formatRand } from '../../utils/safeguards';
 
 const Finish: React.FC = () => {
 
@@ -38,24 +39,19 @@ const Finish: React.FC = () => {
                     return;
                 }
 
-                const data = otpSnap.data() as { 
-                    firstName?: string,
-                    email?: string, 
-                    income?: { 
-                        totalIncome?: number 
-                    },
-                    limits?: {
-                        monthlyLimit? : number,
-                        weeklyLimit? : number
-                    }
-                };
+                const data = otpSnap.data() as any;
+
+                const name = data?.firstName || data?.firstname || "";
+                const mIncome = safeNum(data?.income?.totalIncome);
+                const mLimit = safeNum(data?.limits?.monthlyLimit || data?.limit?.monthlyLimit);
+                const wLimit = safeNum(data?.limits?.weeklyLimit || data?.limit?.weeklyLimit);
 
                 setUserData((prev) => ({
                     ...prev,
-                    name: data?.firstName || "",
-                    monthlyIncome: data.income?.totalIncome || 0,
-                    monthlyLimit: data.limits?.monthlyLimit || 0,
-                    weeklyLimit: data.limits?.weeklyLimit || 0
+                    name: name,
+                    monthlyIncome: mIncome,
+                    monthlyLimit: mLimit,
+                    weeklyLimit: wLimit
                 }));
 
             } catch (e) {
@@ -99,15 +95,15 @@ const Finish: React.FC = () => {
                 <div className={styles.statsContainer}>
                 <div className={styles.statBox}>
                     <span className={styles.statLabel}>Monthly income</span>
-                    <span className={styles.statValue}>R {userData.monthlyIncome}</span>
+                    <span className={styles.statValue}>{formatRand(userData.monthlyIncome, 0)}</span>
                 </div>
                 <div className={styles.statBox}>
                     <span className={styles.statLabel}>Monthly limit</span>
-                    <span className={styles.statValue}>R {userData.monthlyLimit}</span>
+                    <span className={styles.statValue}>{formatRand(userData.monthlyLimit, 0)}</span>
                 </div>
                 <div className={`${styles.statBox} ${styles.noBorder}`}>
                     <span className={styles.statLabel}>Weekly limit</span>
-                    <span className={`${styles.statValue} ${styles.highlightedValue}`}>R {userData.weeklyLimit}</span>
+                    <span className={`${styles.statValue} ${styles.highlightedValue}`}>{formatRand(userData.weeklyLimit, 0)}</span>
                 </div>
                 </div>
 

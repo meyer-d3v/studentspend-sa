@@ -5,6 +5,7 @@ import { db } from "../../backend/firebaseConfig/config";
 import { doc, getDocs, serverTimestamp, updateDoc, increment, addDoc, collection, query, where, orderBy, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
+import { safeNum, safePercent, formatRand } from '../utils/safeguards';
 
 type Expenses = {
   id: string,
@@ -56,21 +57,29 @@ const AddExpensePage: React.FC = () => {
 
       } 
 
+      const amountNum = safeNum(formData.amount, 0);
+
       await addDoc(expensesRef, {
         userId: uid,
         date: formData.date,
-        amount: formData.amount,
+        amount: amountNum,
         description: formData.description,
         category: formData.category,
         notes: formData.notes,
         createdAt: serverTimestamp()
       });
 
+      // Ensure category key exactly matches budget_planner schema (e.g. dataAndAirtime)
+      const catKey =
+        formData.category === "dataandairtime" || formData.category === "dataAndAirtime"
+          ? "dataAndAirtime"
+          : formData.category.toLowerCase();
+
       await updateDoc(budgetRef, {
-        [`spentTotals.${(formData.category).toLowerCase()}`]: increment(formData.amount)
+        [`spentTotals.${catKey}`]: increment(amountNum)
       });
 
-      if (formData.amount > 250) {
+      if (amountNum > 250) {
 
         const alertsRef = collection(db, "alerts");
 
@@ -79,7 +88,7 @@ const AddExpensePage: React.FC = () => {
           createdAt: serverTimestamp(),
           status: 'info',
           title: 'Large expense recorded',
-          description: `An expense of R${formData.amount}  was added to ${formData.category}, above your R 250 large expense threshold.`
+          description: `An expense of R${amountNum} was added to ${formData.category}, above your R 250 large expense threshold.`
         });
 
       }
@@ -166,11 +175,16 @@ const AddExpensePage: React.FC = () => {
 
       const data = snapshot.data() as Record<string, any>;
 
+      const catKey =
+        category === "dataandairtime" || category === "dataAndAirtime"
+          ? "dataAndAirtime"
+          : category.toLowerCase();
+
       // The allocated amount lives at the top-level key (e.g. data.groceries)
-      const allocated: number = data[category] ?? 0;
+      const allocated: number = safeNum(data[catKey]);
 
       // The amount spent so far lives under spentTotals (e.g. data.spentTotals.groceries)
-      const spent: number = data?.spentTotals?.[category] ?? 0;
+      const spent: number = safeNum(data?.spentTotals?.[catKey]);
 
       setBudgetData({ allocated, spent });
 
@@ -208,15 +222,14 @@ const AddExpensePage: React.FC = () => {
 
   }, [activeSelection]);
 
-  // Derived budget values
-  const remainingBudget = Math.max(budgetData.allocated - budgetData.spent, 0);
-  const projectedSpent  = budgetData.spent + (formData.amount || 0);
-  const spentPercent    = budgetData.allocated > 0
-    ? Math.min((projectedSpent / budgetData.allocated) * 100, 100)
-    : 0;
-  const currentPercent  = budgetData.allocated > 0
-    ? Math.min((budgetData.spent / budgetData.allocated) * 100, 100)
-    : 0;
+  // Derived budget values with safeguards
+  const safeAllocated = safeNum(budgetData.allocated);
+  const safeSpent = safeNum(budgetData.spent);
+  const safeInputAmount = safeNum(formData.amount);
+  const remainingBudget = Math.max(safeAllocated - safeSpent, 0);
+  const projectedSpent  = safeSpent + safeInputAmount;
+  const spentPercent    = safePercent(projectedSpent, safeAllocated);
+  const currentPercent  = safePercent(safeSpent, safeAllocated);
 
   // Human-readable category label for the widget title
   const categoryLabel: Record<string, string> = {
@@ -269,7 +282,7 @@ const AddExpensePage: React.FC = () => {
                   className={styles.amountInput} 
                   onChange={(e) => setFormData((prev) => ({
                     ...prev,
-                    amount: e.target.valueAsNumber,
+                    amount: safeNum(e.target.valueAsNumber, 0),
                   }))}
                   placeholder="150.00" 
                 />
@@ -370,10 +383,10 @@ const AddExpensePage: React.FC = () => {
               </button>
               
               <button 
-                className={`${styles.categoryChip} ${activeSelection === "entertainment" && styles.activeChip}`}
+                className={`${styles.categoryChip} ${(activeSelection === "other" || activeSelection === "entertainment") && styles.activeChip}`}
                 onClick={() => {
                   
-                  setActiveSelection("entertainment");
+                  setActiveSelection("other");
                   setFormData((prev) => ({
                     ...prev,
                     category: "other"
@@ -443,11 +456,11 @@ const AddExpensePage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
                 <LoaderCircle size={20} className={styles.loaderCircle} />
               </div>
-            ) : activeSelection && budgetData.allocated > 0 ? (
+            ) : activeSelection && safeAllocated > 0 ? (
               <>
                 <div className={styles.budgetHeader}>
-                  <span className={styles.budgetValue}>R {remainingBudget.toFixed(2)}</span>
-                  <span className={styles.budgetLimit}>left of R {budgetData.allocated.toFixed(2)}</span>
+                  <span className={styles.budgetValue}>{formatRand(remainingBudget)}</span>
+                  <span className={styles.budgetLimit}>left of {formatRand(safeAllocated)}</span>
                 </div>
                 
                 <div className={styles.progressBarContainer}>
@@ -458,13 +471,13 @@ const AddExpensePage: React.FC = () => {
                 </div>
                 
                 <p className={styles.widgetSubtext}>
-                  {formData.amount > 0
+                  {safeInputAmount > 0
                     ? `Saving this expense takes you to ${spentPercent.toFixed(0)}% of the ${categoryLabel[activeSelection] ?? activeSelection} category for ${currentMonth}.`
                     : `You have used ${currentPercent.toFixed(0)}% of your ${categoryLabel[activeSelection] ?? activeSelection} budget for ${currentMonth}.`
                   }
                 </p>
               </>
-            ) : activeSelection && budgetData.allocated === 0 ? (
+            ) : activeSelection && safeAllocated === 0 ? (
               <p className={styles.widgetSubtext}>
                 No budget allocated for {categoryLabel[activeSelection] ?? activeSelection}. Set one in the Budget Planner.
               </p>
@@ -484,8 +497,8 @@ const AddExpensePage: React.FC = () => {
               {userExpenses.length !== 0 ? (
                 userExpenses.map((expense, index) => (
                   <li key={index} className={styles.recentItem}>
-                    <span className={styles.recentDesc}>{expense.description}</span>
-                    <span className={styles.recentAmount}>R {expense.amount}</span>
+                    <span className={styles.recentDesc}>{expense.description || "Expense"}</span>
+                    <span className={styles.recentAmount}>{formatRand(expense.amount)}</span>
                   </li>
                 ))
               )

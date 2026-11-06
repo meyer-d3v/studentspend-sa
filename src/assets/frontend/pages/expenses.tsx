@@ -6,6 +6,7 @@ import { getDocs, query, where, collection, deleteDoc, doc } from 'firebase/fire
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { Trash2 } from 'lucide-react';
+import { safeNum, safePercent, safeDate, formatRand } from '../utils/safeguards';
 
 type Expense = {
   id: string;
@@ -97,7 +98,6 @@ const Expenses: React.FC = () => {
 
   // ── Data fetching ──────────────────────────────────────────────────────
   const buildCategoryData = (data: Expense[]): { categories: CategorySummary[]; total: number } => {
-
     let total = 0;
     const categoryMap: Record<string, { label: string; amount: number }> = {
       food:           { label: 'Food',            amount: 0 },
@@ -109,20 +109,20 @@ const Expenses: React.FC = () => {
     };
 
     data.forEach((expense) => {
-      total += expense.amount;
+      total += safeNum(expense.amount);
       const raw = (expense.category ?? 'other').toLowerCase().replace(/\s+/g, '');
       const key =
         raw === 'data' || raw === 'data&airtime' ? 'dataandairtime'
         : raw === 'education'                    ? 'other'
         : categoryMap[raw] !== undefined         ? raw
         : 'other';
-      categoryMap[key].amount += expense.amount;
+      categoryMap[key].amount += safeNum(expense.amount);
     });
 
     const categories: CategorySummary[] = Object.values(categoryMap).map((cat) => ({
       name:       cat.label,
-      amount:     `R ${cat.amount.toFixed(2)}`,
-      percentage: total > 0 ? `${((cat.amount / total) * 100).toFixed(1)}%` : '0%',
+      amount:     formatRand(cat.amount),
+      percentage: `${safePercent(cat.amount, total).toFixed(1)}%`,
     }));
 
     return { categories, total };
@@ -146,8 +146,8 @@ const Expenses: React.FC = () => {
       const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Expense[];
 
       data.sort((a, b) => {
-        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+        const dateA = safeDate(a.date || (a as any).createdAt);
+        const dateB = safeDate(b.date || (b as any).createdAt);
         return dateB.getTime() - dateA.getTime();
       });
 
@@ -199,9 +199,7 @@ const Expenses: React.FC = () => {
     if (search.trim()) {
       const s = search.toLowerCase();
       list = list.filter((expense) => {
-        const dateStr = expense.date?.toDate
-          ? expense.date.toDate().toDateString()
-          : new Date(expense.date).toDateString();
+        const dateStr = safeDate(expense.date || (expense as any).createdAt).toDateString();
         return (
           (expense.description ?? '').toLowerCase().includes(s) ||
           (expense.category    ?? '').toLowerCase().includes(s) ||
@@ -222,9 +220,7 @@ const Expenses: React.FC = () => {
       const monthOption = MONTH_OPTIONS.find((m) => m.label === appliedMonth);
       if (monthOption) {
         list = list.filter((expense) => {
-          const d = expense.date?.toDate
-            ? expense.date.toDate()
-            : new Date(expense.date);
+          const d = safeDate(expense.date || (expense as any).createdAt);
           return d.getFullYear() === monthOption.year && d.getMonth() === monthOption.month;
         });
       }
@@ -355,16 +351,14 @@ const Expenses: React.FC = () => {
                   displayList.map((expense, index) => (
                     <tr key={expense.id ?? index}>
                       <td className={styles.textMuted}>
-                        {expense.date?.toDate
-                          ? expense.date.toDate().toLocaleDateString('en-ZA')
-                          : new Date(expense.date).toLocaleDateString('en-ZA')}
+                        {safeDate(expense.date || (expense as any).createdAt).toLocaleDateString('en-ZA')}
                       </td>
                       <td className={styles.textMuted} style={{ textTransform: 'capitalize' }}>
                         {normaliseCategory(expense.category)}
                       </td>
-                      <td className={styles.textDark}>{expense.description}</td>
+                      <td className={styles.textDark}>{expense.description || "Expense"}</td>
                       <td className={`${styles.textRight} ${styles.textBold}`}>
-                        R {Number(expense.amount).toFixed(2)}
+                        {formatRand(expense.amount)}
                       </td>
                       <td className={styles.textRight}>
                         <button
@@ -424,7 +418,7 @@ const Expenses: React.FC = () => {
 
           <div className={styles.summaryFooter}>
             <span className={styles.totalLabel}>Total</span>
-            <span className={styles.totalAmount}>R {totalAmountForExpenses.toFixed(2)}</span>
+            <span className={styles.totalAmount}>{formatRand(totalAmountForExpenses)}</span>
           </div>
         </div>
 

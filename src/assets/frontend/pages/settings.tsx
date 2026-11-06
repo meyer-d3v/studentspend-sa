@@ -6,8 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { db } from "../../backend/firebaseConfig/config";
 import { getDoc, getDocs, doc, updateDoc, collection, query, where } from 'firebase/firestore';
 import { jsPDF } from 'jspdf';
+import { safeNum, safeDate, formatRand } from '../utils/safeguards';
 
-type User = {
+export type User = {
   firstName: string;
   lastName: string;
   email: string;
@@ -58,32 +59,54 @@ const Settings: React.FC = () => {
       if (!uid) { navigate("/"); return; }
 
       const snapshot = await getDoc(doc(db, "users", uid));
-      const data = snapshot.data() as User;
+      const data = snapshot.exists() ? (snapshot.data() as any) : null;
+
+      const firstName = data?.firstName || data?.firstname || "";
+      const lastName = data?.lastName || data?.lastname || "";
 
       setUserData((prev) => ({
         ...prev,
-        firstname:         data.firstName,
-        lastname:          data.lastName,
-        email:             data.email,
-        institution:       data.institution,
-        yearOfStudy:       data.yearOfStudy,
-        cityCampus:        data.cityCampus,
-        twoFactorEnabled:  data.twoFactorEnabled ?? false,
+        firstname:         firstName,
+        lastname:          lastName,
+        email:             data?.email ?? "",
+        institution:       data?.institution ?? "",
+        yearOfStudy:       data?.yearOfStudy ?? "",
+        cityCampus:        data?.cityCampus ?? "",
+        twoFactorEnabled:  data?.twoFactorEnabled ?? false,
         income: {
-          nsfasAllowance: data.income.nsfasAllowance,
-          partTimeWork:   data.income.partTimeWork,
-          familySupport:  data.income.familySupport,
-          totalIncome:    data.income.totalIncome,
+          nsfasAllowance: safeNum(data?.income?.nsfasAllowance),
+          partTimeWork:   safeNum(data?.income?.partTimeWork),
+          familySupport:  safeNum(data?.income?.familySupport),
+          totalIncome:    safeNum(data?.income?.totalIncome),
         }
       }));
     } catch (e) {
       console.log("Error occured: " + e);
+      // On error, set safe defaults
+      setUserData((prev) => ({
+        ...prev,
+        firstname: "",
+        lastname: "",
+        email: "",
+        institution: "",
+        yearOfStudy: "",
+        cityCampus: "",
+        twoFactorEnabled: false,
+        income: {
+          nsfasAllowance: 0,
+          partTimeWork: 0,
+          familySupport: 0,
+          totalIncome: 0,
+        }
+      }));
     }
   };
 
   const updateUserData = async () => {
     try {
       await updateDoc(doc(db, "users", uid), {
+        firstName:   userData.firstname,
+        lastName:    userData.lastname,
         firstname:   userData.firstname,
         lastname:    userData.lastname,
         email:       userData.email,
@@ -229,11 +252,11 @@ const Settings: React.FC = () => {
       checkPage(50);
       heading("Income sources");
       const incY = y;
-      row("NSFAS allowance", `R ${userData.income.nsfasAllowance.toFixed(2)}`);
-      row("Family support",  `R ${userData.income.familySupport.toFixed(2)}`);
+      row("NSFAS allowance", formatRand(userData.income.nsfasAllowance));
+      row("Family support",  formatRand(userData.income.familySupport));
       y = incY;
-      row("Part-time work",  `R ${userData.income.partTimeWork.toFixed(2)}`,  col2);
-      row("Total monthly",   `R ${userData.income.totalIncome.toFixed(2)}`,   col2);
+      row("Part-time work",  formatRand(userData.income.partTimeWork), col2);
+      row("Total monthly",   formatRand(userData.income.totalIncome), col2);
       y += 2;
 
       // ── Section 3: Budget allocations ─────────────────────────────────
@@ -248,8 +271,7 @@ const Settings: React.FC = () => {
         cats.forEach((cat, i) => {
           if (i % 2 === 0) { checkPage(14); }
           const x = i % 2 === 0 ? margin : col2;
-          if (i % 2 === 0 && i > 0) { /* already checked */ }
-          row(labels[cat], `R ${Number(budget[cat] || 0).toFixed(2)}`, x);
+          row(labels[cat], formatRand(budget[cat]), x);
           if (i % 2 === 0) y -= 11; // keep same row for next column
         });
         y += 11;
@@ -280,8 +302,8 @@ const Settings: React.FC = () => {
 
         // Sort newest first
         const sorted = [...expenses].sort((a, b) => {
-          const dA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-          const dB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+          const dA = safeDate(a.date || (a as any).createdAt);
+          const dB = safeDate(b.date || (b as any).createdAt);
           return dB.getTime() - dA.getTime();
         });
 
@@ -293,7 +315,7 @@ const Settings: React.FC = () => {
             pdf.rect(margin, y - 3.5, pageW - margin * 2, 7, "F");
           }
           pdf.setTextColor(60, 60, 60);
-          const d = exp.date?.toDate ? exp.date.toDate() : new Date(exp.date);
+          const d = safeDate(exp.date || (exp as any).createdAt);
           pdf.text(d.toLocaleDateString("en-ZA"), margin + 2, y);
           pdf.text(String(exp.category ?? "—").slice(0, 14), margin + 32, y);
 
@@ -302,7 +324,7 @@ const Settings: React.FC = () => {
 
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(31, 67, 99);
-          pdf.text(`R ${Number(exp.amount || 0).toFixed(2)}`, pageW - margin - 2, y, { align: "right" });
+          pdf.text(formatRand(exp.amount), pageW - margin - 2, y, { align: "right" });
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(60, 60, 60);
           y += 7;
@@ -313,12 +335,12 @@ const Settings: React.FC = () => {
         pdf.setDrawColor(180, 180, 180);
         pdf.line(margin, y, pageW - margin, y);
         y += 5;
-        const total = sorted.reduce((s, e) => s + Number(e.amount || 0), 0);
+        const total = sorted.reduce((s, e) => s + safeNum(e.amount), 0);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9.5);
         pdf.setTextColor(31, 67, 99);
         pdf.text("Total spent", margin + 2, y);
-        pdf.text(`R ${total.toFixed(2)}`, pageW - margin - 2, y, { align: "right" });
+        pdf.text(`R ${safeNum(total).toFixed(2)}`, pageW - margin - 2, y, { align: "right" });
       }
 
       // ── Footer on every page ───────────────────────────────────────────

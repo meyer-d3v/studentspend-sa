@@ -5,6 +5,7 @@ import { getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 // @ts-ignore
 import { db } from "../../backend/firebaseConfig/config";
 import { LoaderCircle } from 'lucide-react';
+import { safeNum, safePercent } from '../utils/safeguards';
 
 type CategoryKey = "transport" | "food" | "rent" | "dataAndAirtime" | "groceries" | "other";
 
@@ -42,6 +43,20 @@ const BudgetPlanner: React.FC = () => {
       const uid = getAuth().currentUser?.uid || "";
       if (!uid) {
         console.log("No user logged in");
+        // Set safe defaults when no user
+        setUserData({
+          monthlyIncome: 0,
+          monthlyLimit: 0,
+          weeklyLimit: 0,
+          catagoryAllocations: {
+            transport: 0,
+            food: 0,
+            rent: 0,
+            dataAndAirtime: 0,
+            groceries: 0,
+            other: 0,
+          },
+        });
         return;
       }
 
@@ -51,15 +66,15 @@ const BudgetPlanner: React.FC = () => {
       const userDoc = userSnap.exists() ? userSnap.data() : null;
 
       const incomeObj = userDoc?.income;
-      const monthlyIncome =
-        incomeObj?.totalIncome ??
-        ((incomeObj?.nsfasAllowance || 0) +
-          (incomeObj?.partTimeWork || 0) +
-          (incomeObj?.familySupport || 0));
+      // Safely parse income values with fallback to 0
+      const nsfasAllowance = safeNum(incomeObj?.nsfasAllowance);
+      const partTimeWork = safeNum(incomeObj?.partTimeWork);
+      const familySupport = safeNum(incomeObj?.familySupport);
+      const totalIncome = safeNum(incomeObj?.totalIncome, nsfasAllowance + partTimeWork + familySupport);
 
       let monthlyLimit =
-        userDoc?.limit?.monthlyLimit ||
-        userDoc?.limits?.monthlyLimit ||
+        safeNum(userDoc?.limit?.monthlyLimit) ||
+        safeNum(userDoc?.limits?.monthlyLimit) ||
         0;
 
       // 2. Fetch category budget allocations
@@ -68,16 +83,16 @@ const BudgetPlanner: React.FC = () => {
       const budgetData = budgetSnap.exists() ? budgetSnap.data() : null;
 
       const allocations = {
-        transport: Number(budgetData?.transport) || 0,
-        food: Number(budgetData?.food) || 0,
-        rent: Number(budgetData?.rent) || 0,
-        dataAndAirtime: Number(budgetData?.dataAndAirtime) || 0,
-        groceries: Number(budgetData?.groceries) || 0,
-        other: Number(budgetData?.other) || 0,
+        transport: safeNum(budgetData?.transport),
+        food: safeNum(budgetData?.food),
+        rent: safeNum(budgetData?.rent),
+        dataAndAirtime: safeNum(budgetData?.dataAndAirtime),
+        groceries: safeNum(budgetData?.groceries),
+        other: safeNum(budgetData?.other),
       };
 
       if (!monthlyLimit && budgetData?.monthlyLimit) {
-        monthlyLimit = Number(budgetData.monthlyLimit);
+        monthlyLimit = safeNum(budgetData.monthlyLimit);
       }
 
       // If monthlyLimit still 0 but user has saved allocations, sum them up
@@ -93,14 +108,31 @@ const BudgetPlanner: React.FC = () => {
         monthlyLimit = totalAllocated;
       }
 
+      // Ensure weeklyLimit is finite and safe
+      const weeklyLimit = monthlyLimit > 0 && isFinite(monthlyLimit) ? monthlyLimit / 4 : 0;
+
       setUserData({
-        monthlyIncome,
-        monthlyLimit,
-        weeklyLimit: monthlyLimit > 0 ? monthlyLimit / 4 : 0,
+        monthlyIncome: isFinite(totalIncome) ? totalIncome : 0,
+        monthlyLimit: isFinite(monthlyLimit) ? monthlyLimit : 0,
+        weeklyLimit: isFinite(weeklyLimit) ? weeklyLimit : 0,
         catagoryAllocations: allocations,
       });
     } catch (e) {
       console.log("Error loading budget data: " + e);
+      // On error, set safe defaults
+      setUserData({
+        monthlyIncome: 0,
+        monthlyLimit: 0,
+        weeklyLimit: 0,
+        catagoryAllocations: {
+          transport: 0,
+          food: 0,
+          rent: 0,
+          dataAndAirtime: 0,
+          groceries: 0,
+          other: 0,
+        },
+      });
     } finally {
       setFetching(false);
     }
@@ -268,13 +300,10 @@ const BudgetPlanner: React.FC = () => {
         ) : (
           <div className={styles.categoryGrid}>
             {CATEGORIES.map((cat) => {
-              const allocation = userData.catagoryAllocations[cat.key] || 0;
-              const percentNum =
-                userData.monthlyLimit > 0 && allocation > 0
-                  ? (allocation / userData.monthlyLimit) * 100
-                  : 0;
+              const allocation = safeNum(userData.catagoryAllocations[cat.key], 0);
+              const percentNum = safePercent(allocation, userData.monthlyLimit);
               const displayPercent = percentNum > 0 ? percentNum.toFixed(1) : "0";
-              const progressWidth = Math.min(Math.max(percentNum, 0), 100);
+              const progressWidth = percentNum;
 
               return (
                 <div key={cat.key} className={styles.categoryItem}>
