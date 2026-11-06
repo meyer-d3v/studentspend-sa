@@ -6,8 +6,16 @@ import styles from "../../styles/RegisterWorkflowStyles/Budget.module.css";
 import { updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { LoaderCircle } from 'lucide-react';
-import { safeNum } from '../../utils/safeguards';
+import { safeNum, formatRand } from '../../utils/safeguards';
 
+const RECOMMENDED_SPLIT = {
+    rent: 0.34,
+    food: 0.26,
+    transport: 0.17,
+    dataAndAirtime: 0.12,
+    groceries: 0.00, // Left at 0 to keep the math balanced with the previous report
+    other: 0.11
+};
 
 const Budget: React.FC = () => {
 
@@ -25,13 +33,25 @@ const Budget: React.FC = () => {
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState<boolean>(false);
 
+    const monthlyLimitVal = safeNum(userIncomeData.monthlyLimit);
+    const recommendedAllocations = {
+        transport: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.transport),
+        food: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.food),
+        rent: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.rent),
+        dataAndAirtime: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.dataAndAirtime),
+        groceries: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.groceries),
+        other: Math.round(monthlyLimitVal * RECOMMENDED_SPLIT.other),
+    };
+    const totalAllocated = Object.values(recommendedAllocations).reduce((sum, val) => sum + val, 0);
+    const remainingToAllocate = Math.max(0, monthlyLimitVal - totalAllocated);
+
     const categories = [
-        { name: 'Transport', amount: 'R0', percentage: 0 },
-        { name: 'Food', amount: 'R0', percentage: 0 },
-        { name: 'Rent', amount: 'R0', percentage: 0 },
-        { name: 'Data and airtime', amount: 'R0', percentage: 0 },
-        { name: 'Groceries', amount: 'R0', percentage: 0 },
-        { name: 'Other', amount: 'R0', percentage: 0 },
+        { name: 'Transport', amount: formatRand(recommendedAllocations.transport, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.transport * 100) : 0 },
+        { name: 'Food', amount: formatRand(recommendedAllocations.food, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.food * 100) : 0 },
+        { name: 'Rent', amount: formatRand(recommendedAllocations.rent, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.rent * 100) : 0 },
+        { name: 'Data and airtime', amount: formatRand(recommendedAllocations.dataAndAirtime, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.dataAndAirtime * 100) : 0 },
+        { name: 'Groceries', amount: formatRand(recommendedAllocations.groceries, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.groceries * 100) : 0 },
+        { name: 'Other', amount: formatRand(recommendedAllocations.other, 0), percentage: monthlyLimitVal > 0 ? Math.round(RECOMMENDED_SPLIT.other * 100) : 0 },
     ];
 
     const updateUserData = async () => {
@@ -61,12 +81,12 @@ const Budget: React.FC = () => {
             await setDoc(budgetRef, {
                 monthlyLimit: mLimit,
                 weeklyLimit: wLimit,
-                transport: 0,
-                food: 0,
-                rent: 0,
-                dataAndAirtime: 0,
-                groceries: 0,
-                other: 0,
+                transport: Math.round(mLimit * RECOMMENDED_SPLIT.transport),
+                food: Math.round(mLimit * RECOMMENDED_SPLIT.food),
+                rent: Math.round(mLimit * RECOMMENDED_SPLIT.rent),
+                dataAndAirtime: Math.round(mLimit * RECOMMENDED_SPLIT.dataAndAirtime),
+                groceries: Math.round(mLimit * RECOMMENDED_SPLIT.groceries),
+                other: Math.round(mLimit * RECOMMENDED_SPLIT.other),
                 spentTotals: {
                     transport: 0,
                     food: 0,
@@ -191,8 +211,8 @@ const Budget: React.FC = () => {
 
                 <div className={styles.splitSection}>
                     <div className={styles.splitHeader}>
-                    <h3 className={styles.splitTitle}>Split the R {userIncomeData.monthlyIncome} between your categories</h3>
-                    <span className={styles.remainingText}>R 0 left to allocate</span>
+                    <h3 className={styles.splitTitle}>Recommended split for your {formatRand(monthlyLimitVal, 0)} monthly limit</h3>
+                    <span className={styles.remainingText}>{formatRand(remainingToAllocate, 0)} left to allocate</span>
                     </div>
 
                     <div className={styles.categoriesGrid}>
